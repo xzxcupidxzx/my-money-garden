@@ -36,11 +36,13 @@ export function IncomePieChart({ transactions }: IncomePieChartProps) {
       breakdown[catId].amount += Number(t.amount);
     });
 
+    // Only show categories with at least 1%
     return Object.values(breakdown)
       .map((item) => ({
         ...item,
         percentage: totalIncome > 0 ? (item.amount / totalIncome) * 100 : 0,
       }))
+      .filter(item => item.percentage >= 1)
       .sort((a, b) => b.amount - a.amount);
   }, [transactions]);
 
@@ -97,6 +99,13 @@ export function IncomePieChart({ transactions }: IncomePieChartProps) {
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
+                  color: 'hsl(var(--foreground))',
+                }}
+                labelStyle={{
+                  color: 'hsl(var(--foreground))',
+                }}
+                itemStyle={{
+                  color: 'hsl(var(--foreground))',
                 }}
               />
             </PieChart>

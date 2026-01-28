@@ -194,13 +194,13 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
       breakdown[catId].amount += Number(t.amount);
     });
 
-    // Show all categories with at least 0.5% to include small ones
+    // Only show categories with at least 1%
     return Object.values(breakdown)
       .map((item) => ({
         ...item,
         percentage: totalExpense > 0 ? (item.amount / totalExpense) * 100 : 0,
       }))
-      .filter(item => item.percentage >= 0.5)
+      .filter(item => item.percentage >= 1)
       .sort((a, b) => b.amount - a.amount) as CategoryData[];
   }, [transactions]);
 
