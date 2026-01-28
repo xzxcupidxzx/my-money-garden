@@ -7,7 +7,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useReconciliation } from '@/hooks/useReconciliation';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronUp, ArrowUpDown, Grid3X3, List } from 'lucide-react';
 import { format, addMonths, subMonths, getDaysInMonth, startOfMonth, getDay, parseISO, isSameDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 type AccountSortType = 'name' | 'balance-high' | 'balance-low';
+type AccountLayoutType = 'list' | 'grid';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function HistoryPage() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [showAccounts, setShowAccounts] = useState(true);
   const [accountSort, setAccountSort] = useState<AccountSortType>('name');
+  const [accountLayout, setAccountLayout] = useState<AccountLayoutType>('list');
   const { transactions, summary, loading } = useTransactions(selectedDate);
   const { accounts, refetch: refetchAccounts, totalBalance } = useAccounts();
   const { reconciliations, loading: reconciliationLoading, refetch: refetchReconciliations } = useReconciliation();
@@ -110,98 +112,151 @@ export default function HistoryPage() {
     );
   }
 
+  // Render accounts section component
+  const renderAccountsSection = () => (
+    <Collapsible open={showAccounts} onOpenChange={setShowAccounts}>
+      <Card>
+        <CardHeader className="pb-2">
+          <CollapsibleTrigger asChild>
+            <div className="flex items-center justify-between cursor-pointer">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wallet className="h-5 w-5" />
+                Tài khoản
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <span className={cn(
+                  "font-bold",
+                  totalBalance >= 0 ? "text-income" : "text-expense"
+                )}>
+                  <CurrencyDisplay amount={totalBalance} />
+                </span>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  {showAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+          </CollapsibleTrigger>
+        </CardHeader>
+        <CollapsibleContent>
+          <CardContent className="pt-0">
+            {/* Layout and Sort controls */}
+            <div className="flex justify-between items-center mb-3">
+              {/* Layout toggle */}
+              <div className="flex gap-1">
+                <Button
+                  variant={accountLayout === 'list' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setAccountLayout('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={accountLayout === 'grid' ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setAccountLayout('grid')}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Sort dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-2">
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    <span className="text-xs">{sortLabels[accountSort]}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setAccountSort('name')}>
+                    Tên A-Z
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setAccountSort('balance-high')}>
+                    Số dư cao → thấp
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setAccountSort('balance-low')}>
+                    Số dư thấp → cao
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
+            {sortedAccounts.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">
+                Chưa có tài khoản nào
+              </p>
+            ) : accountLayout === 'grid' ? (
+              // Grid layout
+              <div className="grid grid-cols-2 gap-3">
+                {sortedAccounts.map((account) => {
+                  const IconComponent = account.icon && AVAILABLE_ICONS[account.icon] 
+                    ? AVAILABLE_ICONS[account.icon] 
+                    : Wallet;
+                  return (
+                    <div
+                      key={account.id}
+                      className="p-4 rounded-xl border bg-card/50 hover:bg-muted/50 transition-colors text-center"
+                    >
+                      <div 
+                        className="h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3"
+                        style={{ backgroundColor: `${account.color || '#64748b'}20` }}
+                      >
+                        <IconComponent className="h-6 w-6" style={{ color: account.color || '#64748b' }} />
+                      </div>
+                      <p className="font-medium text-sm">{account.name}</p>
+                      <p className={cn(
+                        "text-lg font-bold mt-1",
+                        Number(account.balance) >= 0 ? "text-income" : "text-expense"
+                      )}>
+                        <CurrencyDisplay amount={account.balance} />
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              // List layout
+              <div className="space-y-2">
+                {sortedAccounts.map((account) => {
+                  const IconComponent = account.icon && AVAILABLE_ICONS[account.icon] 
+                    ? AVAILABLE_ICONS[account.icon] 
+                    : Wallet;
+                  return (
+                    <div
+                      key={account.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="h-10 w-10 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: `${account.color || '#64748b'}20` }}
+                        >
+                          <IconComponent className="h-5 w-5" style={{ color: account.color || '#64748b' }} />
+                        </div>
+                        <span className="font-medium">{account.name}</span>
+                      </div>
+                      <span className={cn(
+                        "font-bold",
+                        Number(account.balance) >= 0 ? "text-income" : "text-expense"
+                      )}>
+                        <CurrencyDisplay amount={account.balance} />
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+
   return (
     <div className="p-4 space-y-4 pb-24">
       <h1 className="text-2xl font-bold">Lịch sử</h1>
-
-      {/* Account Balance Section */}
-      <Collapsible open={showAccounts} onOpenChange={setShowAccounts}>
-        <Card>
-          <CardHeader className="pb-2">
-            <CollapsibleTrigger asChild>
-              <div className="flex items-center justify-between cursor-pointer">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
-                  Tài khoản
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "font-bold",
-                    totalBalance >= 0 ? "text-income" : "text-expense"
-                  )}>
-                    <CurrencyDisplay amount={totalBalance} />
-                  </span>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    {showAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-            </CollapsibleTrigger>
-          </CardHeader>
-          <CollapsibleContent>
-            <CardContent className="pt-0">
-              {/* Sort dropdown */}
-              <div className="flex justify-end mb-3">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5" />
-                      <span className="text-xs">{sortLabels[accountSort]}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setAccountSort('name')}>
-                      Tên A-Z
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setAccountSort('balance-high')}>
-                      Số dư cao → thấp
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setAccountSort('balance-low')}>
-                      Số dư thấp → cao
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              {sortedAccounts.length === 0 ? (
-                <p className="text-muted-foreground text-sm text-center py-4">
-                  Chưa có tài khoản nào
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {sortedAccounts.map((account) => {
-                    const IconComponent = account.icon && AVAILABLE_ICONS[account.icon] 
-                      ? AVAILABLE_ICONS[account.icon] 
-                      : Wallet;
-                    return (
-                      <div
-                        key={account.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div 
-                            className="h-10 w-10 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: `${account.color || '#64748b'}20` }}
-                          >
-                            <IconComponent className="h-5 w-5" style={{ color: account.color || '#64748b' }} />
-                          </div>
-                          <span className="font-medium">{account.name}</span>
-                        </div>
-                        <span className={cn(
-                          "font-bold",
-                          Number(account.balance) >= 0 ? "text-income" : "text-expense"
-                        )}>
-                          <CurrencyDisplay amount={account.balance} />
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
 
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -368,6 +423,9 @@ export default function HistoryPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Account Balance Section - moved below calendar */}
+          {renderAccountsSection()}
         </TabsContent>
 
         {/* Reconciliation Tab */}
