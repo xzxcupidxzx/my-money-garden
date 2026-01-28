@@ -32,17 +32,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = "Input";
 
-// Technical input wrapper with corner markers
+// Technical input wrapper with corner markers - thicker borders
 const TechnicalInputWrapper = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => (
   <div ref={ref} className={cn("relative", className)} {...props}>
-    {/* Corner markers */}
-    <div className="absolute -top-px -left-px w-2 h-2 border-t border-l border-primary/50" />
-    <div className="absolute -top-px -right-px w-2 h-2 border-t border-r border-primary/50" />
-    <div className="absolute -bottom-px -left-px w-2 h-2 border-b border-l border-primary/50" />
-    <div className="absolute -bottom-px -right-px w-2 h-2 border-b border-r border-primary/50" />
+    {/* Corner markers - thick 3px */}
+    <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--primary) / 0.5)', borderLeft: '3px solid hsl(var(--primary) / 0.5)' }} />
+    <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none" style={{ borderBottom: '3px solid hsl(var(--primary) / 0.5)', borderRight: '3px solid hsl(var(--primary) / 0.5)' }} />
     {children}
   </div>
 ));

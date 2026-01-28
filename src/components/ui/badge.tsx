@@ -8,22 +8,22 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        // Industrial default - square with border
-        default: "border-transparent bg-primary text-primary-foreground rounded-sm",
-        secondary: "border-transparent bg-secondary text-secondary-foreground rounded-sm",
-        destructive: "border-transparent bg-destructive text-destructive-foreground rounded-sm",
+        // Industrial default - square with border (no rounded)
+        default: "border-transparent bg-primary text-primary-foreground",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive: "border-transparent bg-destructive text-destructive-foreground",
         // Technical outline - sharp corners
-        outline: "text-foreground border-foreground/30 bg-transparent rounded-none",
+        outline: "text-foreground border-foreground/30 bg-transparent",
         // Sector badge - bordered with accent
-        sector: "border-primary/50 bg-primary/10 text-primary rounded-none",
+        sector: "border-primary/50 bg-primary/10 text-primary",
         // Status badges
-        success: "border-transparent bg-income/20 text-income rounded-sm",
-        warning: "border-transparent bg-warning/20 text-warning rounded-sm",
-        error: "border-transparent bg-expense/20 text-expense rounded-sm",
-        // Chip styles - more rounded for interactivity
-        action: "border-primary bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer rounded-sm",
-        filter: "border-primary bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer rounded-sm",
-        input: "border-border bg-muted text-foreground hover:bg-muted/80 cursor-pointer rounded-sm",
+        success: "border-transparent bg-income/20 text-income",
+        warning: "border-transparent bg-warning/20 text-warning",
+        error: "border-transparent bg-expense/20 text-expense",
+        // Chip styles - interactive
+        action: "border-primary bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer",
+        filter: "border-primary bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer",
+        input: "border-border bg-muted text-foreground hover:bg-muted/80 cursor-pointer",
       },
     },
     defaultVariants: {

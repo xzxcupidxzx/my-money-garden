@@ -35,15 +35,15 @@ const TabsTrigger = React.forwardRef<
       "hover:text-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       "disabled:pointer-events-none disabled:opacity-50",
-      // Active state with underline indicator and node
+      // Active state with underline indicator and square node
       "data-[state=active]:text-primary data-[state=active]:font-medium",
       // Underline
       "after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary",
       "after:w-0 after:transition-all after:duration-200",
       "data-[state=active]:after:w-full",
-      // Node indicator
+      // Square node indicator (not rounded)
       "before:absolute before:bottom-0 before:left-1/2 before:-translate-x-1/2 before:translate-y-1/2",
-      "before:w-1.5 before:h-1.5 before:rounded-full before:bg-primary",
+      "before:w-1.5 before:h-1.5 before:bg-primary",
       "before:scale-0 before:transition-transform before:duration-200",
       "data-[state=active]:before:scale-100",
       className,

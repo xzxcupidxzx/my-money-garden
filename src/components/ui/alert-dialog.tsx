@@ -28,23 +28,27 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => (
   <AlertDialogPortal>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       ref={ref}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border/50 bg-background p-6 shadow-2xl duration-200",
-        "rounded-sm",
-        // HUD Corner markers
-        "before:absolute before:top-0 before:left-0 before:w-4 before:h-4 before:border-t-2 before:border-l-2 before:border-destructive/60",
-        "after:absolute after:bottom-0 after:right-0 after:w-4 after:h-4 after:border-b-2 after:border-r-2 after:border-destructive/60",
+        "relative",
         // Animation
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className,
       )}
       {...props}
-    />
+    >
+      {/* HUD Corner markers - thick 3px with destructive color */}
+      <div className="absolute top-0 left-0 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--destructive) / 0.6)', borderLeft: '3px solid hsl(var(--destructive) / 0.6)' }} />
+      <div className="absolute top-0 right-0 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--destructive) / 0.6)', borderRight: '3px solid hsl(var(--destructive) / 0.6)' }} />
+      <div className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none" style={{ borderBottom: '3px solid hsl(var(--destructive) / 0.6)', borderLeft: '3px solid hsl(var(--destructive) / 0.6)' }} />
+      <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none" style={{ borderBottom: '3px solid hsl(var(--destructive) / 0.6)', borderRight: '3px solid hsl(var(--destructive) / 0.6)' }} />
+      {children}
+    </AlertDialogPrimitive.Content>
   </AlertDialogPortal>
 ));
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;

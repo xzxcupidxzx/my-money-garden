@@ -35,7 +35,7 @@ const sheetVariants = cva(
       side: {
         top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t rounded-t-lg data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
           "inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
@@ -60,14 +60,14 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         className={cn(sheetVariants({ side }), "relative", className)} 
         {...props}
       >
-        {/* HUD Corner markers */}
-        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/50" />
-        <div className="absolute top-0 right-12 w-4 h-4 border-t-2 border-r-2 border-primary/50" />
-        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary/50" />
-        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary/50" />
+        {/* HUD Corner markers - thick 3px */}
+        <div className="absolute top-0 left-0 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--primary) / 0.5)', borderLeft: '3px solid hsl(var(--primary) / 0.5)' }} />
+        <div className="absolute top-0 right-12 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--primary) / 0.5)', borderRight: '3px solid hsl(var(--primary) / 0.5)' }} />
+        <div className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none" style={{ borderBottom: '3px solid hsl(var(--primary) / 0.5)', borderLeft: '3px solid hsl(var(--primary) / 0.5)' }} />
+        <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none" style={{ borderBottom: '3px solid hsl(var(--primary) / 0.5)', borderRight: '3px solid hsl(var(--primary) / 0.5)' }} />
         
         {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+        <SheetPrimitive.Close className="absolute right-4 top-4 opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>
@@ -118,7 +118,7 @@ const SheetSectorLabel = ({ code, className }: { code: string; className?: strin
       {code}
     </span>
     <div className="flex-1 h-px bg-border" />
-    <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+    <div className="w-1.5 h-1.5 bg-primary/60" />
   </div>
 );
 SheetSectorLabel.displayName = "SheetSectorLabel";

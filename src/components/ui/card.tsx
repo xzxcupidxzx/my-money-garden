@@ -3,23 +3,24 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "technical" | "hud" | "glass";
+  variant?: "default" | "technical" | "hud" | "glass" | "framed";
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = "default", ...props }, ref) => {
     const variantClasses = {
-      default: "",
+      default: "card-hud", // Default now uses HUD corner markers
       technical: "card-technical",
       hud: "card-hud",
-      glass: "card-glass"
+      glass: "card-glass card-hud",
+      framed: "frame-corners"
     };
 
     return (
       <div 
         ref={ref} 
         className={cn(
-          "rounded-md border bg-card/95 backdrop-blur-sm text-card-foreground shadow-xs transition-all duration-200",
+          "border bg-card/95 backdrop-blur-sm text-card-foreground shadow-xs transition-all duration-200",
           "relative",
           variantClasses[variant],
           className

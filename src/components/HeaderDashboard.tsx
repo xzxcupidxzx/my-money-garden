@@ -43,7 +43,7 @@ export function HeaderDashboard({ summary, month }: HeaderDashboardProps) {
 
         {/* Stats grid with industrial style */}
         <div className="grid grid-cols-3 gap-2">
-          <div className="relative p-3 rounded-sm bg-income/5 border border-income/20 overflow-hidden">
+          <div className="relative p-3 bg-income/5 border border-income/20 overflow-hidden card-hud">
             {/* Diagonal stripe accent */}
             <div className="absolute top-0 right-0 w-8 h-1 bg-income/40" 
                  style={{ transform: 'rotate(-45deg) translate(2px, -2px)' }} />
@@ -56,7 +56,7 @@ export function HeaderDashboard({ summary, month }: HeaderDashboardProps) {
             </div>
           </div>
 
-          <div className="relative p-3 rounded-sm bg-expense/5 border border-expense/20 overflow-hidden">
+          <div className="relative p-3 bg-expense/5 border border-expense/20 overflow-hidden card-hud">
             <div className="absolute top-0 right-0 w-8 h-1 bg-expense/40" 
                  style={{ transform: 'rotate(-45deg) translate(2px, -2px)' }} />
             <div className="flex items-center gap-1 mb-1">
@@ -68,7 +68,7 @@ export function HeaderDashboard({ summary, month }: HeaderDashboardProps) {
             </div>
           </div>
 
-          <div className="relative p-3 rounded-sm bg-primary/5 border border-primary/20 overflow-hidden">
+          <div className="relative p-3 bg-primary/5 border border-primary/20 overflow-hidden card-hud">
             <div className="absolute top-0 right-0 w-8 h-1 bg-primary/40" 
                  style={{ transform: 'rotate(-45deg) translate(2px, -2px)' }} />
             <div className="flex items-center gap-1 mb-1">
