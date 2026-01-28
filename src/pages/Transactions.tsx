@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HeaderDashboard } from '@/components/HeaderDashboard';
 import { TransactionForm } from '@/components/TransactionForm';
 import { TransactionList } from '@/components/TransactionList';
+import { TransactionEditDialog } from '@/components/TransactionEditDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -15,6 +16,7 @@ import { format, addMonths, subMonths } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import type { Transaction } from '@/types/finance';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
@@ -22,9 +24,17 @@ export default function TransactionsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const { toast } = useToast();
 
-  const { groupedTransactions, summary, loading: transLoading, addTransaction, deleteTransaction } = useTransactions(selectedDate);
+  const { 
+    groupedTransactions, 
+    summary, 
+    loading: transLoading, 
+    addTransaction, 
+    updateTransaction,
+    deleteTransaction 
+  } = useTransactions(selectedDate);
   const { categories, loading: catLoading } = useCategories();
   const { accounts, loading: accLoading } = useAccounts();
 
@@ -57,6 +67,26 @@ export default function TransactionsPage() {
         description: 'Giao dịch đã được thêm.',
       });
     }
+  };
+
+  const handleEditTransaction = async (id: string, updates: Partial<Transaction>) => {
+    const result = await updateTransaction(id, updates);
+    if (result) {
+      setEditingTransaction(null);
+      toast({
+        title: 'Thành công!',
+        description: 'Giao dịch đã được cập nhật.',
+      });
+    }
+    return result;
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    await deleteTransaction(id);
+    toast({
+      title: 'Đã xóa!',
+      description: 'Giao dịch đã được xóa.',
+    });
   };
 
   const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
@@ -114,7 +144,18 @@ export default function TransactionsPage() {
       {/* Transaction List */}
       <TransactionList
         groupedTransactions={filteredTransactions}
-        onDelete={deleteTransaction}
+        onDelete={handleDeleteTransaction}
+        onEdit={setEditingTransaction}
+      />
+
+      {/* Edit Transaction Dialog */}
+      <TransactionEditDialog
+        transaction={editingTransaction}
+        open={!!editingTransaction}
+        onOpenChange={(open) => !open && setEditingTransaction(null)}
+        categories={categories}
+        accounts={accounts}
+        onSave={handleEditTransaction}
       />
 
       {/* Add Transaction Button */}

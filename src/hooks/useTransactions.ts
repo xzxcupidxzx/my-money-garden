@@ -140,6 +140,60 @@ export function useTransactions(selectedDate?: Date) {
     fetchTransactions();
   };
 
+  const updateTransaction = async (
+    id: string,
+    updates: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+  ) => {
+    const oldTransaction = transactions.find(t => t.id === id);
+    if (!oldTransaction) return null;
+
+    // Reverse old balance changes first
+    if (oldTransaction.type === 'income') {
+      await updateAccountBalance(oldTransaction.account_id, -oldTransaction.amount);
+    } else if (oldTransaction.type === 'expense') {
+      await updateAccountBalance(oldTransaction.account_id, oldTransaction.amount);
+    } else if (oldTransaction.type === 'transfer' && oldTransaction.to_account_id) {
+      await updateAccountBalance(oldTransaction.account_id, oldTransaction.amount);
+      await updateAccountBalance(oldTransaction.to_account_id, -oldTransaction.amount);
+    }
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating transaction:', error);
+      // Restore old balance on error
+      if (oldTransaction.type === 'income') {
+        await updateAccountBalance(oldTransaction.account_id, oldTransaction.amount);
+      } else if (oldTransaction.type === 'expense') {
+        await updateAccountBalance(oldTransaction.account_id, -oldTransaction.amount);
+      }
+      return null;
+    }
+
+    // Apply new balance changes
+    const newType = updates.type || oldTransaction.type;
+    const newAmount = updates.amount !== undefined ? updates.amount : oldTransaction.amount;
+    const newAccountId = updates.account_id || oldTransaction.account_id;
+    const newToAccountId = updates.to_account_id || oldTransaction.to_account_id;
+
+    if (newType === 'income') {
+      await updateAccountBalance(newAccountId, newAmount);
+    } else if (newType === 'expense') {
+      await updateAccountBalance(newAccountId, -newAmount);
+    } else if (newType === 'transfer' && newToAccountId) {
+      await updateAccountBalance(newAccountId, -newAmount);
+      await updateAccountBalance(newToAccountId, newAmount);
+    }
+
+    fetchTransactions();
+    return data;
+  };
+
   // Group transactions by date
   const groupedTransactions: DailyTransaction[] = transactions.reduce((groups, transaction) => {
     const date = format(parseISO(transaction.date), 'yyyy-MM-dd');
@@ -170,6 +224,7 @@ export function useTransactions(selectedDate?: Date) {
     summary,
     loading,
     addTransaction,
+    updateTransaction,
     deleteTransaction,
     refetch: fetchTransactions,
   };
