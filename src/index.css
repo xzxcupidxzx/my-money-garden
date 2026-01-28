@@ -194,6 +194,27 @@
   }
 }
 
+/* Font Size Classes */
+.text-size-small {
+  font-size: 14px;
+}
+.text-size-small .text-headline-1 { font-size: 1.75rem; }
+.text-size-small .text-headline-2 { font-size: 1.25rem; }
+.text-size-small .text-body-1 { font-size: 0.875rem; }
+.text-size-small .text-body-2 { font-size: 0.75rem; }
+
+.text-size-medium {
+  font-size: 16px;
+}
+
+.text-size-large {
+  font-size: 18px;
+}
+.text-size-large .text-headline-1 { font-size: 2.25rem; }
+.text-size-large .text-headline-2 { font-size: 1.75rem; }
+.text-size-large .text-body-1 { font-size: 1.125rem; }
+.text-size-large .text-body-2 { font-size: 1rem; }
+
 @layer base {
   * {
     @apply border-border;
