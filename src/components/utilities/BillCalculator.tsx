@@ -86,18 +86,35 @@ export function BillCalculator({
       const tenant = tenants.find(t => t.id === selectedMeterData.tenant_id);
       if (tenant?.move_in_date) {
         const moveInDate = new Date(tenant.move_in_date);
+        const moveInDay = moveInDate.getDate(); // Day of month (e.g., 15)
         const now = new Date();
         
-        // If move_in_date is in current month, use it as start
-        if (moveInDate.getMonth() === now.getMonth() && moveInDate.getFullYear() === now.getFullYear()) {
-          setPeriodStart(moveInDate);
-          setPeriodEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0)); // End of current month
+        // Calculate the most recent billing cycle based on move_in_day
+        // If tenant moved in on 15th, billing cycles are: 15/1→15/2, 15/2→15/3, etc.
+        let periodStart: Date;
+        let periodEnd: Date;
+        
+        // Find the most recent "move_in_day" that has passed
+        const currentDay = now.getDate();
+        
+        if (currentDay >= moveInDay) {
+          // Current month's cycle: from this month's move_in_day to next month's
+          periodStart = new Date(now.getFullYear(), now.getMonth(), moveInDay);
+          periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, moveInDay);
         } else {
-          // Use first of last month or move_in_date, whichever is later
-          const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          setPeriodStart(moveInDate > firstOfLastMonth ? moveInDate : firstOfLastMonth);
-          setPeriodEnd(new Date(now.getFullYear(), now.getMonth(), 0)); // End of last month
+          // Previous month's cycle: from last month's move_in_day to this month's
+          periodStart = new Date(now.getFullYear(), now.getMonth() - 1, moveInDay);
+          periodEnd = new Date(now.getFullYear(), now.getMonth(), moveInDay);
         }
+        
+        // Ensure period doesn't start before move_in_date
+        if (periodStart < moveInDate) {
+          periodStart = moveInDate;
+          periodEnd = new Date(moveInDate.getFullYear(), moveInDate.getMonth() + 1, moveInDay);
+        }
+        
+        setPeriodStart(periodStart);
+        setPeriodEnd(periodEnd);
       }
     }
   };
