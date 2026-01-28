@@ -283,26 +283,34 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
         ctx.lineTo(endX, elbowY);
         ctx.stroke();
 
-        // Draw label with icon and percentage
+        // Draw label with color dot and percentage
         const labelText = `${cat.percentage.toFixed(0)}%`;
         ctx.font = '600 11px Inter, system-ui, sans-serif';
         ctx.textBaseline = 'middle';
         
+        // Draw color dot
+        const dotRadius = 5;
+        
         if (isRightSide) {
           ctx.textAlign = 'left';
-          // Draw icon
-          drawIconOnCanvas(ctx, cat.icon, endX + 10, elbowY, 14, cat.color);
+          // Draw color dot
+          ctx.beginPath();
+          ctx.arc(endX + 8, elbowY, dotRadius, 0, Math.PI * 2);
+          ctx.fillStyle = cat.color;
+          ctx.fill();
           // Draw percentage text
           ctx.fillStyle = fgHsl;
-          ctx.fillText(labelText, endX + 20, elbowY);
+          ctx.fillText(labelText, endX + 18, elbowY);
         } else {
           ctx.textAlign = 'right';
-          const textWidth = ctx.measureText(labelText).width;
           // Draw percentage text
           ctx.fillStyle = fgHsl;
-          ctx.fillText(labelText, endX - 20, elbowY);
-          // Draw icon
-          drawIconOnCanvas(ctx, cat.icon, endX - 10, elbowY, 14, cat.color);
+          ctx.fillText(labelText, endX - 18, elbowY);
+          // Draw color dot
+          ctx.beginPath();
+          ctx.arc(endX - 8, elbowY, dotRadius, 0, Math.PI * 2);
+          ctx.fillStyle = cat.color;
+          ctx.fill();
         }
       }
 
