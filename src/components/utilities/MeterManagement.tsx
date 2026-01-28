@@ -32,7 +32,7 @@ export function MeterManagement({
     name: '',
     type: 'electricity' as 'electricity' | 'water',
     is_main: true,
-    tenant_id: '',
+    tenant_id: '__none__',
   });
 
   const handleAdd = async () => {
@@ -41,9 +41,9 @@ export function MeterManagement({
       name: newMeter.name,
       type: newMeter.type,
       is_main: newMeter.is_main,
-      tenant_id: newMeter.tenant_id || null,
+      tenant_id: newMeter.tenant_id === '__none__' ? null : newMeter.tenant_id,
     });
-    setNewMeter({ name: '', type: 'electricity', is_main: true, tenant_id: '' });
+    setNewMeter({ name: '', type: 'electricity', is_main: true, tenant_id: '__none__' });
     setShowAdd(false);
   };
 
@@ -131,7 +131,7 @@ export function MeterManagement({
                 <Label>Đồng hồ chính (Chủ nhà)</Label>
                 <Switch
                   checked={newMeter.is_main}
-                  onCheckedChange={(v) => setNewMeter({ ...newMeter, is_main: v, tenant_id: v ? '' : newMeter.tenant_id })}
+                  onCheckedChange={(v) => setNewMeter({ ...newMeter, is_main: v, tenant_id: v ? '__none__' : newMeter.tenant_id })}
                 />
               </div>
               {!newMeter.is_main && (
@@ -145,7 +145,7 @@ export function MeterManagement({
                       <SelectValue placeholder="Chọn người thuê" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Không gán</SelectItem>
+                      <SelectItem value="__none__">Không gán</SelectItem>
                       {tenants.map(tenant => (
                         <SelectItem key={tenant.id} value={tenant.id}>
                           {tenant.name} {tenant.room_name && `(${tenant.room_name})`}
