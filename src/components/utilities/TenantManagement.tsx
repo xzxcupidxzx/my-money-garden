@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/components/CurrencyDisplay';
@@ -44,32 +44,39 @@ export function TenantManagement({
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  
+  // Form states - separate for add and edit to prevent conflicts
+  const [addFormData, setAddFormData] = useState({
+    name: '',
+    phone: '',
+    room_name: '',
+    monthly_rent: '',
+  });
+  
+  const [editFormData, setEditFormData] = useState({
     name: '',
     phone: '',
     room_name: '',
     monthly_rent: '',
   });
 
-  const resetForm = () => {
-    setFormData({ name: '', phone: '', room_name: '', monthly_rent: '' });
+  const resetAddForm = () => {
+    setAddFormData({ name: '', phone: '', room_name: '', monthly_rent: '' });
   };
 
   const handleAdd = async () => {
-    if (!formData.name) return;
+    if (!addFormData.name.trim()) return;
     setLoading(true);
     
-    // 1. Create tenant first
     const newTenant = await onAddTenant({
-      name: formData.name,
-      phone: formData.phone || null,
-      room_name: formData.room_name || null,
-      monthly_rent: parseFloat(formData.monthly_rent) || 0,
+      name: addFormData.name.trim(),
+      phone: addFormData.phone.trim() || null,
+      room_name: addFormData.room_name.trim() || null,
+      monthly_rent: parseFloat(addFormData.monthly_rent) || 0,
     });
 
-    // 2. Auto-create electricity and water meters for this tenant
     if (newTenant) {
-      const meterPrefix = formData.room_name || formData.name;
+      const meterPrefix = addFormData.room_name.trim() || addFormData.name.trim();
       
       await Promise.all([
         onAddMeter({
@@ -87,22 +94,21 @@ export function TenantManagement({
       ]);
     }
 
-    resetForm();
+    resetAddForm();
     setShowAdd(false);
     setLoading(false);
   };
 
   const handleUpdate = async () => {
-    if (!editingTenant) return;
+    if (!editingTenant || !editFormData.name.trim()) return;
     setLoading(true);
     await onUpdateTenant(editingTenant.id, {
-      name: formData.name,
-      phone: formData.phone || null,
-      room_name: formData.room_name || null,
-      monthly_rent: parseFloat(formData.monthly_rent) || 0,
+      name: editFormData.name.trim(),
+      phone: editFormData.phone.trim() || null,
+      room_name: editFormData.room_name.trim() || null,
+      monthly_rent: parseFloat(editFormData.monthly_rent) || 0,
     });
     setEditingTenant(null);
-    resetForm();
     setLoading(false);
   };
 
@@ -112,16 +118,15 @@ export function TenantManagement({
   };
 
   const startEdit = (tenant: Tenant) => {
-    setEditingTenant(tenant);
-    setFormData({
+    setEditFormData({
       name: tenant.name,
       phone: tenant.phone || '',
       room_name: tenant.room_name || '',
       monthly_rent: tenant.monthly_rent.toString(),
     });
+    setEditingTenant(tenant);
   };
 
-  // Get meters and latest bills for a tenant
   const getTenantUtilities = (tenantId: string) => {
     const tenantMeters = meters.filter(m => m.tenant_id === tenantId);
     const electricityMeter = tenantMeters.find(m => m.type === 'electricity');
@@ -142,50 +147,6 @@ export function TenantManagement({
     };
   };
 
-  const TenantForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
-    <div className="space-y-4">
-      <div>
-        <Label>Tên người thuê *</Label>
-        <Input
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="VD: Nguyễn Văn A"
-        />
-      </div>
-      <div>
-        <Label>Phòng / Tên gọi</Label>
-        <Input
-          value={formData.room_name}
-          onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
-          placeholder="VD: Phòng 1, Tầng trệt..."
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          Đồng hồ điện/nước sẽ tự động được tạo theo tên này
-        </p>
-      </div>
-      <div>
-        <Label>Số điện thoại</Label>
-        <Input
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          placeholder="VD: 0901234567"
-        />
-      </div>
-      <div>
-        <Label>Tiền thuê hàng tháng (VND)</Label>
-        <Input
-          type="number"
-          value={formData.monthly_rent}
-          onChange={(e) => setFormData({ ...formData, monthly_rent: e.target.value })}
-          placeholder="VD: 3000000"
-        />
-      </div>
-      <Button onClick={onSubmit} className="w-full" disabled={loading || !formData.name}>
-        {loading ? 'Đang xử lý...' : submitLabel}
-      </Button>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       {/* Tenants Header */}
@@ -194,32 +155,128 @@ export function TenantManagement({
           <Users className="h-5 w-5" />
           Người thuê ({tenants.length})
         </h2>
-        <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <Dialog open={showAdd} onOpenChange={(open) => {
+          setShowAdd(open);
+          if (!open) resetAddForm();
+        }}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={resetForm}>
+            <Button size="sm">
               <Plus className="h-4 w-4 mr-1" /> Thêm
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Thêm người thuê mới</DialogTitle>
+              <DialogDescription>
+                Hệ thống sẽ tự động tạo đồng hồ điện và nước cho người thuê
+              </DialogDescription>
             </DialogHeader>
-            <TenantForm onSubmit={handleAdd} submitLabel="Thêm người thuê" />
-            <p className="text-xs text-muted-foreground text-center">
-              <AlertCircle className="h-3 w-3 inline mr-1" />
-              Hệ thống sẽ tự động tạo đồng hồ điện và nước cho người thuê
-            </p>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="add-name">Tên người thuê *</Label>
+                <Input
+                  id="add-name"
+                  autoFocus
+                  value={addFormData.name}
+                  onChange={(e) => setAddFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="VD: Nguyễn Văn A"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-room">Phòng / Tên gọi</Label>
+                <Input
+                  id="add-room"
+                  value={addFormData.room_name}
+                  onChange={(e) => setAddFormData(prev => ({ ...prev, room_name: e.target.value }))}
+                  placeholder="VD: Phòng 1, Tầng trệt..."
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Đồng hồ điện/nước sẽ tự động được tạo theo tên này
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="add-phone">Số điện thoại</Label>
+                <Input
+                  id="add-phone"
+                  value={addFormData.phone}
+                  onChange={(e) => setAddFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="VD: 0901234567"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-rent">Tiền thuê hàng tháng (VND)</Label>
+                <Input
+                  id="add-rent"
+                  type="number"
+                  value={addFormData.monthly_rent}
+                  onChange={(e) => setAddFormData(prev => ({ ...prev, monthly_rent: e.target.value }))}
+                  placeholder="VD: 3000000"
+                />
+              </div>
+              <Button 
+                onClick={handleAdd} 
+                className="w-full" 
+                disabled={loading || !addFormData.name.trim()}
+              >
+                {loading ? 'Đang xử lý...' : 'Thêm người thuê'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Edit Dialog */}
       <Dialog open={!!editingTenant} onOpenChange={(open) => !open && setEditingTenant(null)}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Chỉnh sửa người thuê</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin người thuê
+            </DialogDescription>
           </DialogHeader>
-          <TenantForm onSubmit={handleUpdate} submitLabel="Cập nhật" />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Tên người thuê *</Label>
+              <Input
+                id="edit-name"
+                autoFocus
+                value={editFormData.name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-room">Phòng / Tên gọi</Label>
+              <Input
+                id="edit-room"
+                value={editFormData.room_name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, room_name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-phone">Số điện thoại</Label>
+              <Input
+                id="edit-phone"
+                value={editFormData.phone}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-rent">Tiền thuê hàng tháng (VND)</Label>
+              <Input
+                id="edit-rent"
+                type="number"
+                value={editFormData.monthly_rent}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, monthly_rent: e.target.value }))}
+              />
+            </div>
+            <Button 
+              onClick={handleUpdate} 
+              className="w-full" 
+              disabled={loading || !editFormData.name.trim()}
+            >
+              {loading ? 'Đang xử lý...' : 'Cập nhật'}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

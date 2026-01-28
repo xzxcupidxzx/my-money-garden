@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Home, Plus, Trash2, Edit2, Zap, Droplets } from 'lucide-react';
 import { UtilityMeter } from '@/hooks/useUtilities';
@@ -37,31 +37,33 @@ export function MainMeterManagement({
   const [editingMeter, setEditingMeter] = useState<UtilityMeter | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [newMeter, setNewMeter] = useState({ name: '', type: 'electricity' as 'electricity' | 'water' });
+  
+  // Separate form states
+  const [addForm, setAddForm] = useState({ name: '', type: 'electricity' as 'electricity' | 'water' });
   const [editForm, setEditForm] = useState({ name: '', type: 'electricity' as 'electricity' | 'water' });
 
   // Only show main meters (landlord's meters)
   const mainMeters = meters.filter(m => m.is_main && !m.tenant_id);
 
   const handleAdd = async () => {
-    if (!newMeter.name) return;
+    if (!addForm.name.trim()) return;
     setLoading(true);
     await onAddMeter({
-      name: newMeter.name,
-      type: newMeter.type,
+      name: addForm.name.trim(),
+      type: addForm.type,
       is_main: true,
       tenant_id: null,
     });
-    setNewMeter({ name: '', type: 'electricity' });
+    setAddForm({ name: '', type: 'electricity' });
     setShowAdd(false);
     setLoading(false);
   };
 
   const handleUpdate = async () => {
-    if (!editingMeter || !editForm.name) return;
+    if (!editingMeter || !editForm.name.trim()) return;
     setLoading(true);
     await onUpdateMeter(editingMeter.id, {
-      name: editForm.name,
+      name: editForm.name.trim(),
       type: editForm.type,
     });
     setEditingMeter(null);
@@ -74,11 +76,11 @@ export function MainMeterManagement({
   };
 
   const startEdit = (meter: UtilityMeter) => {
-    setEditingMeter(meter);
     setEditForm({
       name: meter.name,
       type: meter.type as 'electricity' | 'water',
     });
+    setEditingMeter(meter);
   };
 
   return (
@@ -90,28 +92,39 @@ export function MainMeterManagement({
               <Home className="h-5 w-5 text-primary" />
               Đồng hồ chính (Chủ nhà)
             </CardTitle>
-            <Dialog open={showAdd} onOpenChange={setShowAdd}>
+            <Dialog open={showAdd} onOpenChange={(open) => {
+              setShowAdd(open);
+              if (!open) setAddForm({ name: '', type: 'electricity' });
+            }}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                   <Plus className="h-4 w-4 mr-1" /> Thêm
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                   <DialogTitle>Thêm đồng hồ chính</DialogTitle>
+                  <DialogDescription>
+                    Tạo đồng hồ tổng của chủ nhà
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Tên đồng hồ *</Label>
+                    <Label htmlFor="meter-name">Tên đồng hồ *</Label>
                     <Input
-                      value={newMeter.name}
-                      onChange={(e) => setNewMeter({ ...newMeter, name: e.target.value })}
+                      id="meter-name"
+                      autoFocus
+                      value={addForm.name}
+                      onChange={(e) => setAddForm(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="VD: Điện tổng, Nước chính..."
                     />
                   </div>
                   <div>
                     <Label>Loại</Label>
-                    <Select value={newMeter.type} onValueChange={(v: 'electricity' | 'water') => setNewMeter({ ...newMeter, type: v })}>
+                    <Select 
+                      value={addForm.type} 
+                      onValueChange={(v: 'electricity' | 'water') => setAddForm(prev => ({ ...prev, type: v }))}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -129,7 +142,7 @@ export function MainMeterManagement({
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={handleAdd} className="w-full" disabled={loading || !newMeter.name}>
+                  <Button onClick={handleAdd} className="w-full" disabled={loading || !addForm.name.trim()}>
                     {loading ? 'Đang xử lý...' : 'Thêm đồng hồ'}
                   </Button>
                 </div>
@@ -181,21 +194,29 @@ export function MainMeterManagement({
 
       {/* Edit Dialog */}
       <Dialog open={!!editingMeter} onOpenChange={(open) => !open && setEditingMeter(null)}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Chỉnh sửa đồng hồ</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin đồng hồ
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Tên đồng hồ *</Label>
+              <Label htmlFor="edit-meter-name">Tên đồng hồ *</Label>
               <Input
+                id="edit-meter-name"
+                autoFocus
                 value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
               />
             </div>
             <div>
               <Label>Loại</Label>
-              <Select value={editForm.type} onValueChange={(v: 'electricity' | 'water') => setEditForm({ ...editForm, type: v })}>
+              <Select 
+                value={editForm.type} 
+                onValueChange={(v: 'electricity' | 'water') => setEditForm(prev => ({ ...prev, type: v }))}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -213,7 +234,7 @@ export function MainMeterManagement({
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleUpdate} className="w-full" disabled={loading || !editForm.name}>
+            <Button onClick={handleUpdate} className="w-full" disabled={loading || !editForm.name.trim()}>
               {loading ? 'Đang xử lý...' : 'Cập nhật'}
             </Button>
           </div>
