@@ -57,10 +57,16 @@ export default function DataBackupPage() {
     downloadBackup,
     uploadBackup 
   } = useDataBackup();
-  const { loading: legacyLoading, progress: legacyProgress, importLegacyData } = useLegacyImport();
+  const { 
+    loading: legacyLoading, 
+    progress: legacyProgress, 
+    importLegacyData,
+    importCategoriesOnly 
+  } = useLegacyImport();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legacyFileInputRef = useRef<HTMLInputElement>(null);
+  const categoriesFileInputRef = useRef<HTMLInputElement>(null);
   const [saveSlots, setSaveSlots] = useState<ReturnType<typeof getSaveSlots>>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveName, setSaveName] = useState('');
@@ -177,6 +183,7 @@ export default function DataBackupPage() {
       toast({
         title: 'Import thành công',
         description: result.message,
+        duration: 3000,
       });
       setTimeout(() => {
         window.location.reload();
@@ -193,6 +200,35 @@ export default function DataBackupPage() {
     // Reset input
     if (legacyFileInputRef.current) {
       legacyFileInputRef.current.value = '';
+    }
+  };
+
+  const handleCategoriesImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setShowLegacyProgress(true);
+    const result = await importCategoriesOnly(file);
+    
+    if (result.success) {
+      toast({
+        title: 'Import thành công',
+        description: result.message,
+        duration: 3000,
+      });
+      setShowLegacyProgress(false);
+    } else {
+      toast({
+        title: 'Lỗi import',
+        description: result.message,
+        variant: 'destructive',
+      });
+      setShowLegacyProgress(false);
+    }
+
+    // Reset input
+    if (categoriesFileInputRef.current) {
+      categoriesFileInputRef.current.value = '';
     }
   };
 
@@ -330,8 +366,28 @@ export default function DataBackupPage() {
           >
             <ArrowDownToLine className="h-5 w-5 mr-3" />
             <div className="text-left">
-              <p className="font-medium">Import từ file cũ</p>
-              <p className="text-xs text-muted-foreground">Chọn file JSON từ app cũ</p>
+              <p className="font-medium">Import toàn bộ dữ liệu cũ</p>
+              <p className="text-xs text-muted-foreground">Xóa dữ liệu hiện tại và import từ file JSON</p>
+            </div>
+          </Button>
+
+          <input
+            ref={categoriesFileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleCategoriesImport}
+          />
+          <Button 
+            className="w-full justify-start" 
+            variant="outline"
+            onClick={() => categoriesFileInputRef.current?.click()}
+            disabled={loading || legacyLoading}
+          >
+            <DatabaseBackup className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Chỉ import danh mục</p>
+              <p className="text-xs text-muted-foreground">Thêm danh mục mới từ file JSON (không xóa dữ liệu)</p>
             </div>
           </Button>
         </CardContent>

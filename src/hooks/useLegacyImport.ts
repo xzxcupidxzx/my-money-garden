@@ -316,10 +316,116 @@ export function useLegacyImport() {
     }
   };
 
+  // Import only categories from legacy file (no delete existing data)
+  const importCategoriesOnly = async (file: File): Promise<{ success: boolean; message: string }> => {
+    if (!user) return { success: false, message: 'Vui lòng đăng nhập' };
+
+    setLoading(true);
+    setProgress({ current: 0, total: 2, status: 'Đang đọc file...' });
+
+    try {
+      const text = await file.text();
+      const legacyData: LegacyData = JSON.parse(text);
+
+      const expenseCategories = legacyData.financial_expense_categories_v2 || [];
+      const incomeCategories = legacyData.financial_income_categories_v2 || [];
+
+      if (expenseCategories.length === 0 && incomeCategories.length === 0) {
+        throw new Error('Không tìm thấy danh mục trong file');
+      }
+
+      // Get existing categories
+      const { data: existingCategories } = await supabase
+        .from('categories')
+        .select('name, type')
+        .eq('user_id', user.id);
+
+      const existingSet = new Set(
+        (existingCategories || []).map(c => `${c.name}-${c.type}`)
+      );
+
+      setProgress({ current: 1, total: 2, status: 'Đang import danh mục chi...' });
+
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      // Import expense categories
+      for (const cat of expenseCategories) {
+        const name = cat.value || cat.text;
+        const key = `${name}-expense`;
+        
+        if (existingSet.has(key)) {
+          skippedCount++;
+          continue;
+        }
+
+        const { error } = await supabase
+          .from('categories')
+          .insert({
+            user_id: user.id,
+            name,
+            type: 'expense' as const,
+            icon: mapIcon(cat.icon),
+            color: getColorForCategory(name),
+            is_system: cat.system || false,
+          });
+        
+        if (!error) {
+          importedCount++;
+          existingSet.add(key);
+        }
+      }
+
+      setProgress({ current: 2, total: 2, status: 'Đang import danh mục thu...' });
+
+      // Import income categories
+      for (const cat of incomeCategories) {
+        const name = cat.value || cat.text;
+        const key = `${name}-income`;
+        
+        if (existingSet.has(key)) {
+          skippedCount++;
+          continue;
+        }
+
+        const { error } = await supabase
+          .from('categories')
+          .insert({
+            user_id: user.id,
+            name,
+            type: 'income' as const,
+            icon: mapIcon(cat.icon),
+            color: getColorForCategory(name),
+            is_system: cat.system || false,
+          });
+        
+        if (!error) {
+          importedCount++;
+          existingSet.add(key);
+        }
+      }
+
+      setLoading(false);
+      return { 
+        success: true, 
+        message: `Import thành công! ${importedCount} danh mục mới${skippedCount > 0 ? `, bỏ qua ${skippedCount} danh mục đã tồn tại` : ''}.` 
+      };
+
+    } catch (error) {
+      console.error('Error importing categories:', error);
+      setLoading(false);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Lỗi không xác định' 
+      };
+    }
+  };
+
   return {
     loading,
     progress,
     importLegacyData,
+    importCategoriesOnly,
   };
 }
 
