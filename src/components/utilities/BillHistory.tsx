@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Zap, Droplets, Trash2, Edit2, History } from 'lucide-react';
 import { format } from 'date-fns';
 import { UtilityMeter, UtilityBill, Tenant } from '@/hooks/useUtilities';
@@ -161,25 +161,31 @@ export function BillHistory({ bills, meters, tenants, onDeleteBill, onUpdateBill
 
       {/* Edit Dialog */}
       <Dialog open={!!editingBill} onOpenChange={(open) => !open && setEditingBill(null)}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Chỉnh sửa hóa đơn</DialogTitle>
+            <DialogDescription>
+              Sửa chỉ số đọc để tính lại tiền
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Chỉ số đầu</Label>
+              <Label htmlFor="bill-prev">Chỉ số đầu</Label>
               <Input
+                id="bill-prev"
+                autoFocus
                 type="number"
                 value={editForm.previous_reading}
-                onChange={(e) => setEditForm({ ...editForm, previous_reading: e.target.value })}
+                onChange={(e) => setEditForm(prev => ({ ...prev, previous_reading: e.target.value }))}
               />
             </div>
             <div>
-              <Label>Chỉ số cuối</Label>
+              <Label htmlFor="bill-curr">Chỉ số cuối</Label>
               <Input
+                id="bill-curr"
                 type="number"
                 value={editForm.current_reading}
-                onChange={(e) => setEditForm({ ...editForm, current_reading: e.target.value })}
+                onChange={(e) => setEditForm(prev => ({ ...prev, current_reading: e.target.value }))}
               />
             </div>
             {editForm.previous_reading && editForm.current_reading && (
