@@ -17,6 +17,161 @@ interface CategoryData {
   icon: string;
 }
 
+// Draw lucide icon on canvas
+function drawIconOnCanvas(
+  ctx: CanvasRenderingContext2D,
+  iconName: string,
+  x: number,
+  y: number,
+  size: number,
+  color: string
+) {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  const s = size / 24; // scale factor
+  ctx.translate(x - size / 2, y - size / 2);
+  ctx.scale(s, s);
+
+  // Draw simple shapes for common icons
+  switch (iconName) {
+    case 'ShoppingCart':
+      ctx.beginPath();
+      ctx.moveTo(6, 6);
+      ctx.lineTo(3, 6);
+      ctx.lineTo(5, 13);
+      ctx.lineTo(16, 13);
+      ctx.lineTo(18, 7);
+      ctx.lineTo(8, 7);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(8, 18, 2, 0, Math.PI * 2);
+      ctx.arc(14, 18, 2, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'Utensils':
+    case 'UtensilsCrossed':
+      ctx.beginPath();
+      ctx.moveTo(8, 3);
+      ctx.lineTo(8, 12);
+      ctx.moveTo(5, 3);
+      ctx.lineTo(5, 8);
+      ctx.lineTo(8, 11);
+      ctx.moveTo(11, 3);
+      ctx.lineTo(11, 8);
+      ctx.lineTo(8, 11);
+      ctx.moveTo(8, 12);
+      ctx.lineTo(8, 21);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(16, 3);
+      ctx.lineTo(16, 21);
+      ctx.moveTo(16, 3);
+      ctx.quadraticCurveTo(20, 6, 16, 10);
+      ctx.stroke();
+      break;
+    case 'Home':
+      ctx.beginPath();
+      ctx.moveTo(3, 12);
+      ctx.lineTo(12, 3);
+      ctx.lineTo(21, 12);
+      ctx.moveTo(6, 10);
+      ctx.lineTo(6, 20);
+      ctx.lineTo(18, 20);
+      ctx.lineTo(18, 10);
+      ctx.stroke();
+      break;
+    case 'Car':
+    case 'Bus':
+      ctx.beginPath();
+      ctx.moveTo(5, 11);
+      ctx.lineTo(5, 7);
+      ctx.quadraticCurveTo(5, 5, 7, 5);
+      ctx.lineTo(17, 5);
+      ctx.quadraticCurveTo(19, 5, 19, 7);
+      ctx.lineTo(19, 11);
+      ctx.lineTo(5, 11);
+      ctx.moveTo(4, 11);
+      ctx.lineTo(20, 11);
+      ctx.lineTo(20, 16);
+      ctx.lineTo(4, 16);
+      ctx.lineTo(4, 11);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(7, 16, 2, 0, Math.PI * 2);
+      ctx.arc(17, 16, 2, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+    case 'Coffee':
+      ctx.beginPath();
+      ctx.moveTo(5, 6);
+      ctx.lineTo(5, 15);
+      ctx.quadraticCurveTo(5, 18, 9, 18);
+      ctx.lineTo(13, 18);
+      ctx.quadraticCurveTo(17, 18, 17, 15);
+      ctx.lineTo(17, 6);
+      ctx.lineTo(5, 6);
+      ctx.moveTo(17, 8);
+      ctx.quadraticCurveTo(21, 8, 21, 11);
+      ctx.quadraticCurveTo(21, 14, 17, 14);
+      ctx.stroke();
+      break;
+    case 'Gamepad2':
+    case 'Gamepad':
+      ctx.beginPath();
+      ctx.rect(4, 8, 16, 10);
+      ctx.moveTo(9, 11);
+      ctx.lineTo(9, 15);
+      ctx.moveTo(7, 13);
+      ctx.lineTo(11, 13);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(16, 11, 1.5, 0, Math.PI * 2);
+      ctx.arc(18, 14, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    case 'Heart':
+      ctx.beginPath();
+      ctx.moveTo(12, 20);
+      ctx.bezierCurveTo(4, 14, 4, 8, 8, 5);
+      ctx.bezierCurveTo(10, 4, 12, 6, 12, 8);
+      ctx.bezierCurveTo(12, 6, 14, 4, 16, 5);
+      ctx.bezierCurveTo(20, 8, 20, 14, 12, 20);
+      ctx.stroke();
+      break;
+    case 'Zap':
+      ctx.beginPath();
+      ctx.moveTo(13, 2);
+      ctx.lineTo(3, 14);
+      ctx.lineTo(12, 14);
+      ctx.lineTo(11, 22);
+      ctx.lineTo(21, 10);
+      ctx.lineTo(12, 10);
+      ctx.lineTo(13, 2);
+      ctx.stroke();
+      break;
+    case 'Gift':
+      ctx.beginPath();
+      ctx.rect(3, 8, 18, 4);
+      ctx.rect(5, 12, 14, 8);
+      ctx.moveTo(12, 8);
+      ctx.lineTo(12, 20);
+      ctx.stroke();
+      break;
+    default:
+      // Default: draw a circle for unknown icons
+      ctx.beginPath();
+      ctx.arc(12, 12, 8, 0, Math.PI * 2);
+      ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
 export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -39,12 +194,13 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
       breakdown[catId].amount += Number(t.amount);
     });
 
+    // Show all categories with at least 0.5% to include small ones
     return Object.values(breakdown)
       .map((item) => ({
         ...item,
         percentage: totalExpense > 0 ? (item.amount / totalExpense) * 100 : 0,
       }))
-      .filter(item => item.percentage >= 1)
+      .filter(item => item.percentage >= 0.5)
       .sort((a, b) => b.amount - a.amount) as CategoryData[];
   }, [transactions]);
 
@@ -74,6 +230,15 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
     const outerRadius = Math.min(width, height) / 2 - 50;
     const innerRadius = outerRadius * 0.6;
 
+    // Get computed styles for theme colors
+    const computedStyle = getComputedStyle(document.documentElement);
+    const foregroundColor = computedStyle.getPropertyValue('--foreground').trim();
+    const mutedForegroundColor = computedStyle.getPropertyValue('--muted-foreground').trim();
+    
+    // Parse HSL values
+    const fgHsl = foregroundColor ? `hsl(${foregroundColor})` : '#ffffff';
+    const mutedHsl = mutedForegroundColor ? `hsl(${mutedForegroundColor})` : '#94a3b8';
+
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
@@ -93,8 +258,8 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
       ctx.fillStyle = cat.color;
       ctx.fill();
 
-      // Draw leader lines and labels
-      if (cat.percentage >= 5) {
+      // Draw leader lines and labels for segments >= 3%
+      if (cat.percentage >= 3) {
         const midAngle = currentAngle + sliceAngle / 2;
         const isRightSide = Math.cos(midAngle) >= 0;
         
@@ -107,46 +272,37 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
         const elbowY = centerY + Math.sin(midAngle) * (outerRadius + 20);
         
         // End point (horizontal extension)
-        const endX = isRightSide ? elbowX + 25 : elbowX - 25;
+        const endX = isRightSide ? elbowX + 30 : elbowX - 30;
 
-        // Draw leader line
-        ctx.strokeStyle = 'hsl(var(--muted-foreground) / 0.5)';
-        ctx.lineWidth = 1;
+        // Draw leader line with better visibility
+        ctx.strokeStyle = mutedHsl;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(elbowX, elbowY);
         ctx.lineTo(endX, elbowY);
         ctx.stroke();
 
-        // Draw small dot at the end
-        ctx.beginPath();
-        ctx.arc(endX, elbowY, 2, 0, 2 * Math.PI);
-        ctx.fillStyle = cat.color;
-        ctx.fill();
-
         // Draw label with icon and percentage
-        ctx.fillStyle = 'hsl(var(--foreground))';
+        const labelText = `${cat.percentage.toFixed(0)}%`;
         ctx.font = '600 11px Inter, system-ui, sans-serif';
         ctx.textBaseline = 'middle';
         
-        const labelText = `${cat.percentage.toFixed(0)}%`;
-        
         if (isRightSide) {
           ctx.textAlign = 'left';
-          // Draw icon placeholder (colored square)
-          ctx.fillStyle = cat.color;
-          ctx.fillRect(endX + 5, elbowY - 6, 12, 12);
+          // Draw icon
+          drawIconOnCanvas(ctx, cat.icon, endX + 10, elbowY, 14, cat.color);
           // Draw percentage text
-          ctx.fillStyle = 'hsl(var(--foreground))';
+          ctx.fillStyle = fgHsl;
           ctx.fillText(labelText, endX + 20, elbowY);
         } else {
           ctx.textAlign = 'right';
           const textWidth = ctx.measureText(labelText).width;
           // Draw percentage text
-          ctx.fillText(labelText, endX - 5, elbowY);
-          // Draw icon placeholder (colored square)
-          ctx.fillStyle = cat.color;
-          ctx.fillRect(endX - 20 - textWidth, elbowY - 6, 12, 12);
+          ctx.fillStyle = fgHsl;
+          ctx.fillText(labelText, endX - 20, elbowY);
+          // Draw icon
+          drawIconOnCanvas(ctx, cat.icon, endX - 10, elbowY, 14, cat.color);
         }
       }
 
@@ -154,7 +310,7 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
     });
 
     // Draw center total
-    ctx.fillStyle = 'hsl(var(--foreground))';
+    ctx.fillStyle = fgHsl;
     ctx.font = 'bold 14px Inter, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -167,7 +323,7 @@ export function EnhancedPieChart({ transactions, title }: EnhancedPieChartProps)
     
     ctx.fillText(formattedTotal, centerX, centerY - 8);
     ctx.font = '500 10px Inter, system-ui, sans-serif';
-    ctx.fillStyle = 'hsl(var(--muted-foreground))';
+    ctx.fillStyle = mutedHsl;
     ctx.fillText('Tổng chi', centerX, centerY + 8);
 
   }, [categoryBreakdown, totalAmount, hoveredIndex]);
