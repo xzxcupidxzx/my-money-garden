@@ -447,6 +447,101 @@ export type Database = {
           },
         ]
       }
+      rent_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          is_paid: boolean
+          notes: string | null
+          paid_at: string | null
+          payment_date: string
+          period_month: number
+          period_year: number
+          tenant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          payment_date?: string
+          period_month: number
+          period_year: number
+          tenant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          is_paid?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          payment_date?: string
+          period_month?: number
+          period_year?: number
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rent_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean
+          monthly_rent: number
+          move_in_date: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          room_name: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_rent?: number
+          move_in_date?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          room_name?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          monthly_rent?: number
+          move_in_date?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          room_name?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           account_id: string
@@ -593,6 +688,7 @@ export type Database = {
           is_active: boolean | null
           is_main: boolean | null
           name: string
+          tenant_id: string | null
           type: string
           updated_at: string | null
           user_id: string
@@ -603,6 +699,7 @@ export type Database = {
           is_active?: boolean | null
           is_main?: boolean | null
           name: string
+          tenant_id?: string | null
           type: string
           updated_at?: string | null
           user_id: string
@@ -613,9 +710,51 @@ export type Database = {
           is_active?: boolean | null
           is_main?: boolean | null
           name?: string
+          tenant_id?: string | null
           type?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "utility_meters_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      utility_price_settings: {
+        Row: {
+          created_at: string | null
+          electricity_tiers: Json
+          electricity_vat_percent: number
+          id: string
+          updated_at: string | null
+          user_id: string
+          water_includes_vat: boolean
+          water_price: number
+        }
+        Insert: {
+          created_at?: string | null
+          electricity_tiers?: Json
+          electricity_vat_percent?: number
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          water_includes_vat?: boolean
+          water_price?: number
+        }
+        Update: {
+          created_at?: string | null
+          electricity_tiers?: Json
+          electricity_vat_percent?: number
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          water_includes_vat?: boolean
+          water_price?: number
         }
         Relationships: []
       }
