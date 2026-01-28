@@ -68,7 +68,7 @@ export default function TransactionsPage() {
       toast({
         title: 'Thành công!',
         description: 'Giao dịch đã được thêm thành công.',
-        duration: 2000,
+        duration: 1000,
       });
     }
   };
@@ -80,6 +80,7 @@ export default function TransactionsPage() {
       toast({
         title: 'Thành công!',
         description: 'Giao dịch đã được cập nhật.',
+        duration: 1000,
       });
     }
     return result;
@@ -90,6 +91,7 @@ export default function TransactionsPage() {
     toast({
       title: 'Đã xóa!',
       description: 'Giao dịch đã được xóa.',
+      duration: 1000,
     });
   };
 
