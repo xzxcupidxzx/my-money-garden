@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CurrencyDisplay, formatCurrency } from '@/components/CurrencyDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import { useBudgets } from '@/hooks/useBudgets';
-import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, Wallet } from 'lucide-react';
 import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,11 @@ import { MonthComparison } from '@/components/statistics/MonthComparison';
 import { BudgetOverview } from '@/components/statistics/BudgetOverview';
 import { EnhancedPieChart } from '@/components/statistics/EnhancedPieChart';
 import { DateRangeFilter, TimeframeType } from '@/components/statistics/DateRangeFilter';
+import { SpendingTrendChart } from '@/components/statistics/SpendingTrendChart';
+import { TopSpendingTable } from '@/components/statistics/TopSpendingTable';
+import { IncomePieChart } from '@/components/statistics/IncomePieChart';
+import { DailyAverageCard } from '@/components/statistics/DailyAverageCard';
+import { WeekdayAnalysis } from '@/components/statistics/WeekdayAnalysis';
 import type { Transaction } from '@/types/finance';
 
 export default function StatisticsPage() {
@@ -177,37 +182,72 @@ export default function StatisticsPage() {
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Card className="bg-income/10 border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4 text-income" />
-              <span className="text-sm text-muted-foreground">Thu nhập</span>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <TrendingUp className="h-3 w-3 text-income" />
+              <span className="text-xs text-muted-foreground">Thu</span>
             </div>
-            <p className="text-xl font-bold text-income">
+            <p className="text-sm font-bold text-income">
               <CurrencyDisplay amount={summary.income} />
             </p>
           </CardContent>
         </Card>
 
         <Card className="bg-expense/10 border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-4 w-4 text-expense" />
-              <span className="text-sm text-muted-foreground">Chi tiêu</span>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <TrendingDown className="h-3 w-3 text-expense" />
+              <span className="text-xs text-muted-foreground">Chi</span>
             </div>
-            <p className="text-xl font-bold text-expense">
+            <p className="text-sm font-bold text-expense">
               <CurrencyDisplay amount={summary.expense} />
             </p>
           </CardContent>
         </Card>
+
+        <Card className={`${summary.balance >= 0 ? 'bg-income/10' : 'bg-expense/10'} border-0`}>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <Wallet className="h-3 w-3" />
+              <span className="text-xs text-muted-foreground">Ròng</span>
+            </div>
+            <p className={`text-sm font-bold ${summary.balance >= 0 ? 'text-income' : 'text-expense'}`}>
+              {summary.balance >= 0 ? '+' : ''}<CurrencyDisplay amount={summary.balance} />
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Daily Average Stats */}
+      <DailyAverageCard 
+        transactions={transactions}
+        startDate={startDate}
+        endDate={endDate}
+      />
+
+      {/* Spending Trend Chart */}
+      <SpendingTrendChart 
+        transactions={transactions}
+        startDate={startDate}
+        endDate={endDate}
+      />
 
       {/* Enhanced Pie Chart with Leader Lines */}
       <EnhancedPieChart 
         transactions={transactions} 
         title="Chi tiêu theo danh mục" 
       />
+
+      {/* Income Pie Chart */}
+      <IncomePieChart transactions={transactions} />
+
+      {/* Weekday Analysis */}
+      <WeekdayAnalysis transactions={transactions} />
+
+      {/* Top Spending Table */}
+      <TopSpendingTable transactions={transactions} limit={5} />
 
       {/* Budget Overview - only show for month view */}
       {timeframe === 'month' && (
