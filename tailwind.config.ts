@@ -154,22 +154,17 @@ export default {
   		},
 		fontFamily: {
 			sans: [
-				'DM Sans',
+				'Space Grotesk',
+				'Archivo',
 				'ui-sans-serif',
 				'system-ui',
 				'-apple-system',
-				'BlinkMacSystemFont',
-				'Segoe UI',
 				'sans-serif'
 			],
-			serif: [
-				'Playfair Display',
-				'ui-serif',
-				'Georgia',
-				'Cambria',
-				'Times New Roman',
-				'Times',
-				'serif'
+			display: [
+				'Space Grotesk',
+				'Archivo',
+				'sans-serif'
 			],
 			mono: [
 				'JetBrains Mono',
