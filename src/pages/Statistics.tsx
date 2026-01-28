@@ -1,22 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { CurrencyDisplay, formatCurrency } from '@/components/CurrencyDisplay';
-import { useTransactions } from '@/hooks/useTransactions';
-import { useBudgets } from '@/hooks/useBudgets';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
-import { format, addMonths, subMonths, subDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import { useBudgets } from '@/hooks/useBudgets';
+import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
+import { format, subDays, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  PieChart,
-  Pie,
-  Cell,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -26,17 +19,25 @@ import {
 } from 'recharts';
 import { MonthComparison } from '@/components/statistics/MonthComparison';
 import { BudgetOverview } from '@/components/statistics/BudgetOverview';
+import { CategoryPieChart } from '@/components/statistics/CategoryPieChart';
+import { DateRangeFilter, TimeframeType } from '@/components/statistics/DateRangeFilter';
 import type { Transaction } from '@/types/finance';
-
-const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#64748b'];
 
 export default function StatisticsPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const { transactions, summary, loading } = useTransactions(selectedDate);
-  const { budgets, loading: budgetsLoading } = useBudgets(selectedDate);
+  
+  // Date range state
+  const [timeframe, setTimeframe] = useState<TimeframeType>('month');
+  const [startDate, setStartDate] = useState(startOfMonth(new Date()));
+  const [endDate, setEndDate] = useState(endOfMonth(new Date()));
+  
+  // Data state
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [lastMonthTransactions, setLastMonthTransactions] = useState<Transaction[]>([]);
+  
+  const { budgets, loading: budgetsLoading } = useBudgets(startDate);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -44,12 +45,43 @@ export default function StatisticsPage() {
     }
   }, [user, authLoading, navigate]);
 
+  // Fetch transactions for the selected date range
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!user) return;
+      setLoading(true);
+
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select(`
+            *,
+            category:categories(*),
+            account:accounts!transactions_account_id_fkey(*)
+          `)
+          .eq('user_id', user.id)
+          .gte('date', startDate.toISOString())
+          .lte('date', endDate.toISOString())
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+        setTransactions((data || []) as Transaction[]);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) fetchTransactions();
+  }, [user, startDate, endDate]);
+
   // Fetch last month's transactions for comparison
   useEffect(() => {
     const fetchLastMonth = async () => {
       if (!user) return;
       
-      const lastMonth = subMonths(selectedDate, 1);
+      const lastMonth = subMonths(startDate, 1);
       const monthStart = startOfMonth(lastMonth);
       const monthEnd = endOfMonth(lastMonth);
 
@@ -67,37 +99,24 @@ export default function StatisticsPage() {
       setLastMonthTransactions((data || []) as Transaction[]);
     };
 
-    fetchLastMonth();
-  }, [user, selectedDate]);
+    if (user && timeframe === 'month') fetchLastMonth();
+  }, [user, startDate, timeframe]);
 
-  const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
-  const handleNextMonth = () => setSelectedDate(addMonths(selectedDate, 1));
+  const handleDateRangeChange = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
 
-  // Category breakdown for expenses
-  const categoryBreakdown = useMemo(() => {
-    const expenseTransactions = transactions.filter(t => t.type === 'expense');
-    const totalExpense = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  // Calculate summary
+  const summary = useMemo(() => {
+    const income = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+    const expense = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
 
-    const breakdown: Record<string, { name: string; amount: number; color: string }> = {};
-
-    expenseTransactions.forEach(t => {
-      const catId = t.category_id || 'uncategorized';
-      const catName = t.category?.name || 'Khác';
-      const catColor = t.category?.color || '#64748b';
-
-      if (!breakdown[catId]) {
-        breakdown[catId] = { name: catName, amount: 0, color: catColor };
-      }
-      breakdown[catId].amount += Number(t.amount);
-    });
-
-    return Object.values(breakdown)
-      .map((item, index) => ({
-        ...item,
-        percentage: totalExpense > 0 ? (item.amount / totalExpense) * 100 : 0,
-        color: item.color || COLORS[index % COLORS.length],
-      }))
-      .sort((a, b) => b.amount - a.amount);
+    return { income, expense, balance: income - expense };
   }, [transactions]);
 
   // 7-day trend data
@@ -131,6 +150,9 @@ export default function StatisticsPage() {
     return data;
   }, [transactions]);
 
+  const currentMonthLabel = format(startDate, 'MMMM', { locale: vi });
+  const lastMonthLabel = format(subMonths(startDate, 1), 'MMMM', { locale: vi });
+
   if (loading || authLoading) {
     return (
       <div className="p-4 space-y-4">
@@ -141,25 +163,18 @@ export default function StatisticsPage() {
     );
   }
 
-  const currentMonthLabel = format(selectedDate, 'MMMM', { locale: vi });
-  const lastMonthLabel = format(subMonths(selectedDate, 1), 'MMMM', { locale: vi });
-
   return (
     <div className="p-4 space-y-4 pb-24">
       <h1 className="text-2xl font-bold">Thống kê</h1>
 
-      {/* Month Navigation */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h2 className="font-semibold capitalize">
-          {format(selectedDate, 'MMMM yyyy', { locale: vi })}
-        </h2>
-        <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* Date Range Filter */}
+      <DateRangeFilter
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={handleDateRangeChange}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -188,75 +203,25 @@ export default function StatisticsPage() {
         </Card>
       </div>
 
-      {/* Budget Overview */}
-      <BudgetOverview budgets={budgets} loading={budgetsLoading} />
-
-      {/* Month Comparison */}
-      <MonthComparison
-        currentMonthTransactions={transactions}
-        lastMonthTransactions={lastMonthTransactions}
-        currentMonthLabel={currentMonthLabel}
-        lastMonthLabel={lastMonthLabel}
+      {/* Category Pie Chart */}
+      <CategoryPieChart 
+        transactions={transactions} 
+        title="Chi tiêu theo danh mục" 
       />
 
-      {/* Category Breakdown Pie Chart */}
-      {categoryBreakdown.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Chi tiêu theo danh mục</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryBreakdown}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="amount"
-                    nameKey="name"
-                  >
-                    {categoryBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: number) => formatCurrency(value)}
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px',
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+      {/* Budget Overview - only show for month view */}
+      {timeframe === 'month' && (
+        <BudgetOverview budgets={budgets} loading={budgetsLoading} />
+      )}
 
-            {/* Category List */}
-            <div className="space-y-3 mt-4">
-              {categoryBreakdown.map((cat, index) => (
-                <div key={index} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: cat.color }}
-                      />
-                      <span>{cat.name}</span>
-                    </div>
-                    <span className="font-medium">
-                      <CurrencyDisplay amount={cat.amount} />
-                    </span>
-                  </div>
-                  <Progress value={cat.percentage} className="h-2" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Month Comparison - only show for month view */}
+      {timeframe === 'month' && (
+        <MonthComparison
+          currentMonthTransactions={transactions}
+          lastMonthTransactions={lastMonthTransactions}
+          currentMonthLabel={currentMonthLabel}
+          lastMonthLabel={lastMonthLabel}
+        />
       )}
 
       {/* 7-Day Trend */}
