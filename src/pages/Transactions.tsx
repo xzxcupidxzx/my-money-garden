@@ -67,7 +67,8 @@ export default function TransactionsPage() {
       setShowForm(false);
       toast({
         title: 'Thành công!',
-        description: 'Giao dịch đã được thêm.',
+        description: 'Giao dịch đã được thêm thành công.',
+        duration: 2000,
       });
     }
   };
