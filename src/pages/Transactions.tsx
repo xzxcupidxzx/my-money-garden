@@ -9,19 +9,22 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAuth } from '@/hooks/useAuth';
-import { Plus, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
-import { format, addMonths, subMonths } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { startOfMonth, endOfMonth, startOfDay, endOfDay, startOfYear, endOfYear } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import type { Transaction } from '@/types/finance';
+import { DateRangeFilter, TimeframeType } from '@/components/statistics/DateRangeFilter';
 
 export default function TransactionsPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const now = new Date();
+  const [timeframe, setTimeframe] = useState<TimeframeType>('month');
+  const [startDate, setStartDate] = useState(startOfMonth(now));
+  const [endDate, setEndDate] = useState(endOfMonth(now));
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -34,7 +37,7 @@ export default function TransactionsPage() {
     addTransaction, 
     updateTransaction,
     deleteTransaction 
-  } = useTransactions(selectedDate);
+  } = useTransactions(startDate, endDate);
   const { categories, loading: catLoading } = useCategories();
   const { accounts, loading: accLoading } = useAccounts();
 
@@ -89,8 +92,10 @@ export default function TransactionsPage() {
     });
   };
 
-  const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
-  const handleNextMonth = () => setSelectedDate(addMonths(selectedDate, 1));
+  const handleDateRangeChange = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
 
   if (loading) {
     return (
@@ -103,22 +108,18 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Month Navigation */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h2 className="font-semibold capitalize">
-          {format(selectedDate, 'MMMM yyyy', { locale: vi })}
-        </h2>
-        <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      </div>
+    <div className="p-4 space-y-4 pb-24">
+      {/* Date Range Filter */}
+      <DateRangeFilter
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={handleDateRangeChange}
+      />
 
       {/* Header Dashboard */}
-      <HeaderDashboard summary={summary} month={selectedDate} />
+      <HeaderDashboard summary={summary} month={startDate} />
 
       {/* Search Bar */}
       <div className="relative">

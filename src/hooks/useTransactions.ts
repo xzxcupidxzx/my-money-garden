@@ -4,15 +4,16 @@ import { useAuth } from './useAuth';
 import type { Transaction, MonthSummary, DailyTransaction } from '@/types/finance';
 import { startOfMonth, endOfMonth, format, parseISO } from 'date-fns';
 
-export function useTransactions(selectedDate?: Date) {
+export function useTransactions(startDateOrSelected?: Date, endDateParam?: Date) {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<MonthSummary>({ income: 0, expense: 0, balance: 0 });
 
-  const currentDate = selectedDate || new Date();
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
+  // Support both old API (single date) and new API (start + end date)
+  const currentDate = startDateOrSelected || new Date();
+  const monthStart = endDateParam ? startDateOrSelected! : startOfMonth(currentDate);
+  const monthEnd = endDateParam || endOfMonth(currentDate);
 
   useEffect(() => {
     if (user) {
@@ -22,7 +23,7 @@ export function useTransactions(selectedDate?: Date) {
       setSummary({ income: 0, expense: 0, balance: 0 });
       setLoading(false);
     }
-  }, [user, currentDate.getMonth(), currentDate.getFullYear()]);
+  }, [user, monthStart.getTime(), monthEnd.getTime()]);
 
   const fetchTransactions = async () => {
     if (!user) return;
