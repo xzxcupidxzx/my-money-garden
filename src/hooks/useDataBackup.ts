@@ -323,13 +323,71 @@ export function useDataBackup() {
     }
   };
 
+  // Delete all user data from database
+  const deleteAllData = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    setLoading(true);
+    try {
+      // Delete in order to respect foreign key constraints
+      await Promise.all([
+        supabase.from('transactions').delete().eq('user_id', user.id),
+        supabase.from('budgets').delete().eq('user_id', user.id),
+        supabase.from('installments').delete().eq('user_id', user.id),
+        supabase.from('recurring_transactions').delete().eq('user_id', user.id),
+        supabase.from('reconciliations').delete().eq('user_id', user.id),
+        supabase.from('utility_bills').delete().eq('user_id', user.id),
+        supabase.from('rent_payments').delete().eq('user_id', user.id),
+        supabase.from('category_mappings').delete().eq('user_id', user.id),
+        supabase.from('ai_notes').delete().eq('user_id', user.id),
+      ]);
+
+      // Wait a moment for deletes to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Delete meters before tenants (FK constraint)
+      await supabase.from('utility_meters').delete().eq('user_id', user.id);
+      await supabase.from('tenants').delete().eq('user_id', user.id);
+
+      // Delete accounts and categories
+      await supabase.from('accounts').delete().eq('user_id', user.id);
+      await supabase.from('categories').delete().eq('user_id', user.id);
+
+      // Delete utility settings (optional, user might want to keep)
+      await supabase.from('utility_price_settings').delete().eq('user_id', user.id);
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting all data:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete all local save slots
+  const deleteAllSaveSlots = (): boolean => {
+    try {
+      const slots = getSaveSlots();
+      slots.forEach(slot => {
+        localStorage.removeItem(`${STORAGE_KEY}_${slot.id}`);
+      });
+      localStorage.removeItem(STORAGE_KEY);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
     loading,
     getSaveSlots,
     saveToLocal,
     loadFromLocal,
     deleteSaveSlot,
+    deleteAllSaveSlots,
     downloadBackup,
     uploadBackup,
+    deleteAllData,
   };
 }
