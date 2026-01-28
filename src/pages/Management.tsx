@@ -75,7 +75,10 @@ export default function ManagementPage() {
 
   return (
     <div className="p-4 space-y-4 pb-24">
-      <h1 className="text-2xl font-bold">Quản lý Tài chính</h1>
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary rounded-full" />
+        <h1 className="text-2xl font-bold">Quản lý Tài chính</h1>
+      </div>
 
       <Tabs defaultValue="installments" className="w-full">
         <TabsList className="w-full grid grid-cols-3">
@@ -97,16 +100,16 @@ export default function ManagementPage() {
         <TabsContent value="installments" className="mt-4 space-y-4">
           {/* Summary Cards */}
           <div className="grid grid-cols-2 gap-3">
-            <Card className="bg-gradient-to-br from-expense/10 to-expense/5 border-expense/20">
+            <Card className="bg-gradient-to-br from-expense/10 to-expense/5 border-expense/20 backdrop-blur-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-expense mb-2">
                   <CreditCard className="h-4 w-4" />
-                  <span className="text-xs font-medium">Tổng nợ</span>
+                  <span className="text-xs font-mono uppercase tracking-wider">Tổng nợ</span>
                 </div>
-                <p className="text-xl font-bold text-expense">
+                <p className="text-xl font-bold text-expense font-mono tabular-nums">
                   <CurrencyDisplay amount={totalDebt} />
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1 font-mono">
                   {activeInstallments.length} khoản đang trả
                 </p>
               </CardContent>

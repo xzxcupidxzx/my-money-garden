@@ -109,6 +109,12 @@ export default function TransactionsPage() {
 
   return (
     <div className="p-4 space-y-4 pb-24">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary rounded-full" />
+        <h1 className="text-2xl font-bold">Giao dịch</h1>
+      </div>
+
       {/* Date Range Filter */}
       <DateRangeFilter
         timeframe={timeframe}

@@ -68,19 +68,22 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Cài đặt</h1>
+    <div className="p-4 space-y-4 pb-24">
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary rounded-full" />
+        <h1 className="text-2xl font-bold">Cài đặt</h1>
+      </div>
 
       {/* User Profile */}
-      <Card>
+      <Card className="card-technical">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
               <p className="font-semibold">{profile?.full_name || 'Người dùng'}</p>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-sm text-muted-foreground font-mono">{user.email}</p>
             </div>
           </div>
         </CardContent>
