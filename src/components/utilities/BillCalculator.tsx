@@ -79,8 +79,28 @@ export function BillCalculator({
       setPreviousReading('');
     }
     setCurrentReading('');
-  };
 
+    // Set default period based on tenant's move_in_date
+    const selectedMeterData = meters.find(m => m.id === meterId);
+    if (selectedMeterData?.tenant_id) {
+      const tenant = tenants.find(t => t.id === selectedMeterData.tenant_id);
+      if (tenant?.move_in_date) {
+        const moveInDate = new Date(tenant.move_in_date);
+        const now = new Date();
+        
+        // If move_in_date is in current month, use it as start
+        if (moveInDate.getMonth() === now.getMonth() && moveInDate.getFullYear() === now.getFullYear()) {
+          setPeriodStart(moveInDate);
+          setPeriodEnd(new Date(now.getFullYear(), now.getMonth() + 1, 0)); // End of current month
+        } else {
+          // Use first of last month or move_in_date, whichever is later
+          const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          setPeriodStart(moveInDate > firstOfLastMonth ? moveInDate : firstOfLastMonth);
+          setPeriodEnd(new Date(now.getFullYear(), now.getMonth(), 0)); // End of last month
+        }
+      }
+    }
+  };
   const handleSave = async () => {
     if (!selectedMeter || usage <= 0) return;
     setLoading(true);

@@ -4,10 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, AlertCircle } from 'lucide-react';
+import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, CalendarIcon } from 'lucide-react';
 import { formatCurrency } from '@/components/CurrencyDisplay';
 import { Tenant, UtilityMeter, UtilityBill } from '@/hooks/useUtilities';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,6 +56,7 @@ export function TenantManagement({
     phone: '',
     room_name: '',
     monthly_rent: '',
+    move_in_date: new Date() as Date | undefined,
   });
   
   const [editFormData, setEditFormData] = useState({
@@ -58,10 +64,11 @@ export function TenantManagement({
     phone: '',
     room_name: '',
     monthly_rent: '',
+    move_in_date: undefined as Date | undefined,
   });
 
   const resetAddForm = () => {
-    setAddFormData({ name: '', phone: '', room_name: '', monthly_rent: '' });
+    setAddFormData({ name: '', phone: '', room_name: '', monthly_rent: '', move_in_date: new Date() });
   };
 
   const handleAdd = async () => {
@@ -73,6 +80,7 @@ export function TenantManagement({
       phone: addFormData.phone.trim() || null,
       room_name: addFormData.room_name.trim() || null,
       monthly_rent: parseFloat(addFormData.monthly_rent) || 0,
+      move_in_date: addFormData.move_in_date ? format(addFormData.move_in_date, 'yyyy-MM-dd') : null,
     });
 
     if (newTenant) {
@@ -107,6 +115,7 @@ export function TenantManagement({
       phone: editFormData.phone.trim() || null,
       room_name: editFormData.room_name.trim() || null,
       monthly_rent: parseFloat(editFormData.monthly_rent) || 0,
+      move_in_date: editFormData.move_in_date ? format(editFormData.move_in_date, 'yyyy-MM-dd') : null,
     });
     setEditingTenant(null);
     setLoading(false);
@@ -123,6 +132,7 @@ export function TenantManagement({
       phone: tenant.phone || '',
       room_name: tenant.room_name || '',
       monthly_rent: tenant.monthly_rent.toString(),
+      move_in_date: tenant.move_in_date ? new Date(tenant.move_in_date) : undefined,
     });
     setEditingTenant(tenant);
   };
@@ -195,6 +205,34 @@ export function TenantManagement({
                 </p>
               </div>
               <div>
+                <Label>Ngày bắt đầu thuê</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !addFormData.move_in_date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {addFormData.move_in_date ? format(addFormData.move_in_date, 'dd/MM/yyyy', { locale: vi }) : 'Chọn ngày'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={addFormData.move_in_date}
+                      onSelect={(d) => setAddFormData(prev => ({ ...prev, move_in_date: d }))}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ngày này sẽ dùng làm mốc tính điện nước
+                </p>
+              </div>
+              <div>
                 <Label htmlFor="add-phone">Số điện thoại</Label>
                 <Input
                   id="add-phone"
@@ -251,6 +289,31 @@ export function TenantManagement({
                 value={editFormData.room_name}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, room_name: e.target.value }))}
               />
+            </div>
+            <div>
+              <Label>Ngày bắt đầu thuê</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editFormData.move_in_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editFormData.move_in_date ? format(editFormData.move_in_date, 'dd/MM/yyyy', { locale: vi }) : 'Chọn ngày'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editFormData.move_in_date}
+                    onSelect={(d) => setEditFormData(prev => ({ ...prev, move_in_date: d }))}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div>
               <Label htmlFor="edit-phone">Số điện thoại</Label>
@@ -328,11 +391,19 @@ export function TenantManagement({
                         )}
                       </div>
                       
-                      {tenant.phone && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-                          <Phone className="h-3 w-3" /> {tenant.phone}
-                        </p>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
+                        {tenant.move_in_date && (
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            Từ {format(new Date(tenant.move_in_date), 'dd/MM/yyyy')}
+                          </span>
+                        )}
+                        {tenant.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" /> {tenant.phone}
+                          </span>
+                        )}
+                      </div>
 
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         {/* Electricity */}
