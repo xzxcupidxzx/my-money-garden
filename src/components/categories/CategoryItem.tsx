@@ -85,18 +85,31 @@ export function CategoryItem({ category, onDelete, onUpdate }: CategoryItemProps
                 onChange={handleIconChange}
                 color={editColor}
               />
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-full relative overflow-hidden"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {customIcon ? (
-                  <img src={customIcon} alt="Custom icon" className="h-full w-full object-cover rounded-full" />
-                ) : (
-                  <Upload className="h-4 w-4" />
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-full relative overflow-hidden"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {customIcon ? (
+                    <img src={customIcon} alt="Custom icon" className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                </Button>
+                {customIcon && (
+                  <button
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCustomIcon(null);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 )}
-              </Button>
+              </div>
               <input
                 ref={fileInputRef}
                 type="file"
