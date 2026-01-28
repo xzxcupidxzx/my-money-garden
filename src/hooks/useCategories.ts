@@ -47,11 +47,7 @@ export function useCategories() {
 
       if (error) throw error;
 
-      // If no categories exist, create default ones
-      if (!data || data.length === 0) {
-        await createDefaultCategories();
-        return;
-      }
+      // Don't auto-create default categories - let user add their own
 
       setCategories((data || []) as Category[]);
     } catch (error) {
