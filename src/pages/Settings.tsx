@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { usePrivacy } from '@/hooks/usePrivacy';
+import { ThemeColorPicker } from '@/components/settings/ThemeColorPicker';
 import { 
   User, 
   Moon, 
@@ -131,7 +132,7 @@ export default function SettingsPage() {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Tùy chọn</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           {/* Theme Toggle */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -145,6 +146,9 @@ export default function SettingsPage() {
               Đổi
             </Button>
           </div>
+
+          {/* Theme Color Picker */}
+          <ThemeColorPicker />
 
           {/* Privacy Toggle */}
           <div className="flex items-center justify-between">
