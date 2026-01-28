@@ -184,16 +184,14 @@ export function CategoryItem({ category, onDelete, onUpdate }: CategoryItemProps
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-              {!category.is_system && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </>
           )}
         </div>
