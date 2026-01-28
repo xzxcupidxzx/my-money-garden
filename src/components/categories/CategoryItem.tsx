@@ -72,7 +72,25 @@ export function CategoryItem({ category, onDelete, onUpdate }: CategoryItemProps
     setShowDeleteConfirm(false);
   };
 
-  const colorOptions = ['#22c55e', '#ef4444', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#64748b'];
+  const colorOptions = [
+    // Reds & Pinks
+    '#ef4444', '#dc2626', '#b91c1c', '#f43f5e', '#e11d48', '#be123c',
+    '#ec4899', '#db2777', '#be185d',
+    // Oranges & Yellows
+    '#f97316', '#ea580c', '#c2410c', '#f59e0b', '#d97706', '#b45309',
+    '#eab308', '#ca8a04', '#a16207',
+    // Greens
+    '#22c55e', '#16a34a', '#15803d', '#10b981', '#059669', '#047857',
+    '#14b8a6', '#0d9488', '#0f766e',
+    // Blues & Cyans
+    '#06b6d4', '#0891b2', '#0e7490', '#0ea5e9', '#0284c7', '#0369a1',
+    '#3b82f6', '#2563eb', '#1d4ed8', '#6366f1', '#4f46e5', '#4338ca',
+    // Purples
+    '#8b5cf6', '#7c3aed', '#6d28d9', '#a855f7', '#9333ea', '#7e22ce',
+    '#d946ef', '#c026d3', '#a21caf',
+    // Neutrals
+    '#64748b', '#475569', '#334155', '#78716c', '#57534e', '#44403c',
+  ];
 
   return (
     <>
