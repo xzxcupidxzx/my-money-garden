@@ -147,40 +147,43 @@ export default {
   			xl: 'var(--shadow-xl)',
   			'2xl': 'var(--shadow-2xl)'
   		},
-  		fontFamily: {
-  			sans: [
-  				'Roboto',
-  				'ui-sans-serif',
-  				'system-ui',
-  				'-apple-system',
-  				'BlinkMacSystemFont',
-  				'Segoe UI',
-  				'Helvetica Neue',
-  				'Arial',
-  				'Noto Sans',
-  				'sans-serif'
-  			],
-  			serif: [
-  				'Libre Caslon Text',
-  				'ui-serif',
-  				'Georgia',
-  				'Cambria',
-  				'Times New Roman',
-  				'Times',
-  				'serif'
-  			],
-  			mono: [
-  				'Roboto Mono',
-  				'ui-monospace',
-  				'SFMono-Regular',
-  				'Menlo',
-  				'Monaco',
-  				'Consolas',
-  				'Liberation Mono',
-  				'Courier New',
-  				'monospace'
-  			]
-  		}
+		fontFamily: {
+			sans: [
+				'DM Sans',
+				'ui-sans-serif',
+				'system-ui',
+				'-apple-system',
+				'BlinkMacSystemFont',
+				'Segoe UI',
+				'sans-serif'
+			],
+			serif: [
+				'Playfair Display',
+				'ui-serif',
+				'Georgia',
+				'Cambria',
+				'Times New Roman',
+				'Times',
+				'serif'
+			],
+			mono: [
+				'JetBrains Mono',
+				'ui-monospace',
+				'SFMono-Regular',
+				'Menlo',
+				'Monaco',
+				'Consolas',
+				'monospace'
+			]
+		},
+		letterSpacing: {
+			tighter: '-0.05em',
+			tight: '-0.025em',
+			normal: '0',
+			wide: '0.025em',
+			wider: '0.05em',
+			widest: '0.1em'
+		}
   	}
   },
   plugins: [require("tailwindcss-animate")],
