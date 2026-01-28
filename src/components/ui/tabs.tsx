@@ -12,7 +12,9 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center gap-1 border-b border-border bg-transparent text-muted-foreground",
+      "relative inline-flex h-10 items-center justify-center gap-0 bg-transparent text-muted-foreground",
+      // Bottom border with dashed style
+      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-border",
       className,
     )}
     {...props}
@@ -27,16 +29,23 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "relative inline-flex items-center justify-center whitespace-nowrap px-4 py-2 text-body-2 font-medium",
+      "relative inline-flex items-center justify-center whitespace-nowrap px-4 py-2",
+      "font-mono text-xs uppercase tracking-widest",
       "ring-offset-background transition-all duration-200",
       "hover:text-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       "disabled:pointer-events-none disabled:opacity-50",
-      // Active state with underline indicator
-      "data-[state=active]:text-primary data-[state=active]:font-semibold",
-      "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary",
-      "after:scale-x-0 after:transition-transform after:duration-200 after:origin-center",
-      "data-[state=active]:after:scale-x-100",
+      // Active state with underline indicator and node
+      "data-[state=active]:text-primary data-[state=active]:font-medium",
+      // Underline
+      "after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:h-0.5 after:bg-primary",
+      "after:w-0 after:transition-all after:duration-200",
+      "data-[state=active]:after:w-full",
+      // Node indicator
+      "before:absolute before:bottom-0 before:left-1/2 before:-translate-x-1/2 before:translate-y-1/2",
+      "before:w-1.5 before:h-1.5 before:rounded-full before:bg-primary",
+      "before:scale-0 before:transition-transform before:duration-200",
+      "data-[state=active]:before:scale-100",
       className,
     )}
     {...props}
@@ -51,7 +60,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-4 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       className,
     )}
     {...props}
