@@ -7,10 +7,9 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { Users, Calculator, Receipt, Settings2, FileText, Zap, Droplets } from 'lucide-react';
+import { Users, Calculator, FileText, Zap, Home } from 'lucide-react';
 import { TenantManagement } from '@/components/utilities/TenantManagement';
-import { MeterManagement } from '@/components/utilities/MeterManagement';
+import { MainMeterManagement } from '@/components/utilities/MainMeterManagement';
 import { PriceSettings } from '@/components/utilities/PriceSettings';
 import { BillCalculator } from '@/components/utilities/BillCalculator';
 import { ReceiptExport } from '@/components/utilities/ReceiptExport';
@@ -33,6 +32,7 @@ export default function UtilitiesPage() {
     updateMeter,
     deleteMeter,
     addBill,
+    updateBill,
     deleteBill,
     savePriceSettings,
     getElectricityTiers,
@@ -60,26 +60,26 @@ export default function UtilitiesPage() {
     );
   }
 
-  const handleCreateTransaction = async (bill: any, meter: any) => {
-    const utilityCategory = categories.find(c =>
-      c.type === 'expense' &&
-      (c.name.toLowerCase().includes('điện') || c.name.toLowerCase().includes('nước') || c.name.toLowerCase().includes('tiện ích'))
+  // Create income transaction for rent collection
+  const handleCreateIncomeTransaction = async (amount: number, description: string) => {
+    const incomeCategory = categories.find(c =>
+      c.type === 'income' &&
+      (c.name.toLowerCase().includes('thuê') || c.name.toLowerCase().includes('nhà') || c.name.toLowerCase().includes('thu nhập'))
     );
     const defaultAccount = accounts[0];
 
     if (defaultAccount) {
       await addTransaction({
-        type: 'expense',
-        amount: bill.total_amount,
-        category_id: utilityCategory?.id || null,
+        type: 'income',
+        amount: amount,
+        category_id: incomeCategory?.id || null,
         account_id: defaultAccount.id,
         to_account_id: null,
-        description: `${meter?.type === 'electricity' ? 'Tiền điện' : 'Tiền nước'} - ${meter?.name}`,
+        description: description,
         date: new Date().toISOString(),
         is_recurring: false,
         recurring_id: null,
       });
-      toast({ title: 'Thành công', description: 'Đã tạo hóa đơn và giao dịch' });
     }
   };
 
@@ -98,9 +98,9 @@ export default function UtilitiesPage() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Người thuê</span>
           </TabsTrigger>
-          <TabsTrigger value="meters" className="flex flex-col items-center gap-1 py-2 text-xs">
-            <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Đồng hồ</span>
+          <TabsTrigger value="main-meters" className="flex flex-col items-center gap-1 py-2 text-xs">
+            <Home className="h-4 w-4" />
+            <span className="hidden sm:inline">ĐH Chính</span>
           </TabsTrigger>
           <TabsTrigger value="calculate" className="flex flex-col items-center gap-1 py-2 text-xs">
             <Calculator className="h-4 w-4" />
@@ -125,15 +125,15 @@ export default function UtilitiesPage() {
             onAddTenant={addTenant}
             onUpdateTenant={updateTenant}
             onDeleteTenant={deleteTenant}
+            onAddMeter={addMeter}
             getLastReading={getLastReading}
           />
         </TabsContent>
 
-        {/* Meters Tab */}
-        <TabsContent value="meters">
-          <MeterManagement
+        {/* Main Meters Tab */}
+        <TabsContent value="main-meters">
+          <MainMeterManagement
             meters={meters}
-            tenants={tenants}
             getLastReading={getLastReading}
             onAddMeter={addMeter}
             onUpdateMeter={updateMeter}
@@ -145,18 +145,19 @@ export default function UtilitiesPage() {
         <TabsContent value="calculate" className="space-y-4">
           <BillCalculator
             meters={meters}
+            tenants={tenants}
             getLastReading={getLastReading}
             getElectricityTiers={getElectricityTiers}
             getWaterPrice={getWaterPrice}
             getVatPercent={getVatPercent}
             onAddBill={addBill}
-            onCreateTransaction={handleCreateTransaction}
           />
           <BillHistory
             bills={bills}
             meters={meters}
             tenants={tenants}
             onDeleteBill={deleteBill}
+            onUpdateBill={updateBill}
           />
         </TabsContent>
 
@@ -175,6 +176,7 @@ export default function UtilitiesPage() {
             meters={meters}
             bills={bills}
             rentPayments={rentPayments}
+            onCreateTransaction={handleCreateIncomeTransaction}
           />
         </TabsContent>
       </Tabs>

@@ -7,15 +7,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, CalendarIcon, Zap, Droplets } from 'lucide-react';
+import { Calculator, CalendarIcon, Zap, Droplets, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { UtilityMeter, ElectricityTier, calculateElectricityBill, calculateWaterBill } from '@/hooks/useUtilities';
+import { UtilityMeter, Tenant, ElectricityTier, calculateElectricityBill, calculateWaterBill } from '@/hooks/useUtilities';
 import { formatCurrency } from '@/components/CurrencyDisplay';
 
 interface BillCalculatorProps {
   meters: UtilityMeter[];
+  tenants: Tenant[];
   getLastReading: (meterId: string) => number | null;
   getElectricityTiers: () => ElectricityTier[];
   getWaterPrice: () => number;
@@ -27,17 +28,16 @@ interface BillCalculatorProps {
     previous_reading: number;
     current_reading: number;
   }) => Promise<any>;
-  onCreateTransaction?: (bill: any, meter: UtilityMeter) => Promise<void>;
 }
 
 export function BillCalculator({
   meters,
+  tenants,
   getLastReading,
   getElectricityTiers,
   getWaterPrice,
   getVatPercent,
   onAddBill,
-  onCreateTransaction,
 }: BillCalculatorProps) {
   const [selectedMeter, setSelectedMeter] = useState('');
   const [periodStart, setPeriodStart] = useState<Date>(new Date());
@@ -47,6 +47,8 @@ export function BillCalculator({
   const [loading, setLoading] = useState(false);
 
   const meter = meters.find(m => m.id === selectedMeter);
+  const tenant = meter?.tenant_id ? tenants.find(t => t.id === meter.tenant_id) : null;
+  
   const usage = currentReading && previousReading 
     ? parseFloat(currentReading) - parseFloat(previousReading) 
     : 0;
@@ -70,11 +72,11 @@ export function BillCalculator({
     setCurrentReading('');
   };
 
-  const handleSave = async (createTransaction: boolean) => {
+  const handleSave = async () => {
     if (!selectedMeter || usage <= 0) return;
     setLoading(true);
 
-    const bill = await onAddBill({
+    await onAddBill({
       meter_id: selectedMeter,
       period_start: format(periodStart, 'yyyy-MM-dd'),
       period_end: format(periodEnd, 'yyyy-MM-dd'),
@@ -82,15 +84,15 @@ export function BillCalculator({
       current_reading: parseFloat(currentReading),
     });
 
-    if (bill && createTransaction && meter && onCreateTransaction) {
-      await onCreateTransaction(bill, meter);
-    }
-
-    // Reset form
+    // Reset form - keep previous as current for next entry
     setPreviousReading(currentReading);
     setCurrentReading('');
     setLoading(false);
   };
+
+  // Group meters by tenant/main
+  const mainMeters = meters.filter(m => m.is_main);
+  const tenantMeters = meters.filter(m => !m.is_main && m.tenant_id);
 
   return (
     <Card>
@@ -106,24 +108,73 @@ export function BillCalculator({
           <Label>Chọn đồng hồ</Label>
           <Select value={selectedMeter} onValueChange={handleMeterChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Chọn đồng hồ" />
+              <SelectValue placeholder="Chọn đồng hồ để ghi số" />
             </SelectTrigger>
             <SelectContent>
-              {meters.map(m => (
-                <SelectItem key={m.id} value={m.id}>
-                  <div className="flex items-center gap-2">
-                    {m.type === 'electricity' ? (
-                      <Zap className="h-4 w-4 text-yellow-500" />
-                    ) : (
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                    )}
-                    {m.name} {m.is_main && '(Chính)'}
+              {/* Main meters */}
+              {mainMeters.length > 0 && (
+                <>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    Đồng hồ chính
                   </div>
-                </SelectItem>
-              ))}
+                  {mainMeters.map(m => (
+                    <SelectItem key={m.id} value={m.id}>
+                      <div className="flex items-center gap-2">
+                        {m.type === 'electricity' ? (
+                          <Zap className="h-4 w-4 text-yellow-500" />
+                        ) : (
+                          <Droplets className="h-4 w-4 text-blue-500" />
+                        )}
+                        {m.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </>
+              )}
+              
+              {/* Tenant meters */}
+              {tenantMeters.length > 0 && (
+                <>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1 pt-2">
+                    Đồng hồ người thuê
+                  </div>
+                  {tenantMeters.map(m => {
+                    const t = tenants.find(tenant => tenant.id === m.tenant_id);
+                    return (
+                      <SelectItem key={m.id} value={m.id}>
+                        <div className="flex items-center gap-2">
+                          {m.type === 'electricity' ? (
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                          ) : (
+                            <Droplets className="h-4 w-4 text-blue-500" />
+                          )}
+                          {m.name}
+                          {t && <span className="text-muted-foreground">({t.name})</span>}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
+
+        {/* Selected meter info */}
+        {meter && (
+          <div className={`p-2 rounded-lg text-sm ${meter.type === 'electricity' ? 'bg-yellow-500/10' : 'bg-blue-500/10'}`}>
+            <div className="flex items-center gap-2">
+              {meter.type === 'electricity' ? (
+                <Zap className="h-4 w-4 text-yellow-600" />
+              ) : (
+                <Droplets className="h-4 w-4 text-blue-600" />
+              )}
+              <span className="font-medium">{meter.name}</span>
+              {tenant && <Badge variant="outline" className="text-xs">{tenant.name}</Badge>}
+              {meter.is_main && <Badge variant="secondary" className="text-xs">Chính</Badge>}
+            </div>
+          </div>
+        )}
 
         {/* Date Range */}
         <div className="grid grid-cols-2 gap-2">
@@ -217,6 +268,18 @@ export function BillCalculator({
               </div>
             )}
 
+            {/* Water calculation */}
+            {meter.type === 'water' && waterBillPreview && (
+              <div className="space-y-1 text-sm border-t pt-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {usage} m³ × {getWaterPrice().toLocaleString()}đ/m³
+                  </span>
+                  <span className="font-mono">{waterBillPreview.baseAmount.toLocaleString()}đ</span>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
               <span>Tổng cộng:</span>
               <span className="text-primary font-mono">
@@ -227,23 +290,14 @@ export function BillCalculator({
         )}
 
         {/* Actions */}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => handleSave(false)}
-            disabled={!selectedMeter || usage <= 0 || loading}
-          >
-            Chỉ lưu hóa đơn
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => handleSave(true)}
-            disabled={!selectedMeter || usage <= 0 || loading}
-          >
-            Lưu & Tạo giao dịch
-          </Button>
-        </div>
+        <Button
+          className="w-full"
+          onClick={handleSave}
+          disabled={!selectedMeter || usage <= 0 || loading}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          {loading ? 'Đang lưu...' : 'Lưu hóa đơn'}
+        </Button>
       </CardContent>
     </Card>
   );

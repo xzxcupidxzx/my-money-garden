@@ -360,6 +360,49 @@ export function useUtilities() {
     return true;
   };
 
+  const updateBill = async (id: string, updates: { previous_reading: number; current_reading: number }) => {
+    if (!user) return false;
+    
+    const bill = bills.find(b => b.id === id);
+    if (!bill) return false;
+
+    const meter = meters.find(m => m.id === bill.meter_id);
+    if (!meter) return false;
+
+    const usage = updates.current_reading - updates.previous_reading;
+    const tiers = priceSettings?.electricity_tiers || DEFAULT_ELECTRICITY_TIERS;
+    const vatPercent = priceSettings?.electricity_vat_percent || 10;
+    const waterPrice = priceSettings?.water_price || DEFAULT_WATER_PRICE;
+
+    let billCalc;
+    if (meter.type === 'electricity') {
+      billCalc = calculateElectricityBill(usage, tiers, vatPercent);
+    } else {
+      billCalc = calculateWaterBill(usage, waterPrice);
+    }
+
+    const { error } = await supabase
+      .from('utility_bills')
+      .update({
+        previous_reading: updates.previous_reading,
+        current_reading: updates.current_reading,
+        usage,
+        base_amount: billCalc.baseAmount,
+        vat_amount: billCalc.vatAmount,
+        total_amount: billCalc.totalAmount,
+      })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: 'Lỗi', description: 'Không thể cập nhật hóa đơn', variant: 'destructive' });
+      return false;
+    }
+    
+    await fetchBills();
+    toast({ title: 'Thành công', description: 'Đã cập nhật hóa đơn' });
+    return true;
+  };
+
   // Price settings operations
   const savePriceSettings = async (settings: Partial<PriceSettings>) => {
     if (!user) return false;
@@ -459,6 +502,7 @@ export function useUtilities() {
     deleteMeter,
     // Bill ops
     addBill,
+    updateBill,
     deleteBill,
     // Price ops
     savePriceSettings,

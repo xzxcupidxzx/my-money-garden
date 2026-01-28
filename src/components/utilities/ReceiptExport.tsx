@@ -5,25 +5,34 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Download, Printer } from 'lucide-react';
+import { FileText, Printer, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
 import { Tenant, UtilityMeter, UtilityBill, RentPayment } from '@/hooks/useUtilities';
 import { formatCurrency } from '@/components/CurrencyDisplay';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReceiptExportProps {
   tenants: Tenant[];
   meters: UtilityMeter[];
   bills: UtilityBill[];
   rentPayments: RentPayment[];
+  onCreateTransaction?: (amount: number, description: string) => Promise<void>;
 }
 
-export function ReceiptExport({ tenants, meters, bills, rentPayments }: ReceiptExportProps) {
+export function ReceiptExport({ 
+  tenants, 
+  meters, 
+  bills, 
+  rentPayments,
+  onCreateTransaction,
+}: ReceiptExportProps) {
   const [selectedTenant, setSelectedTenant] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [landlordName, setLandlordName] = useState('');
+  const [loading, setLoading] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const currentTenant = tenants.find(t => t.id === selectedTenant);
   const tenantMeters = meters.filter(m => m.tenant_id === selectedTenant);
@@ -49,37 +58,53 @@ export function ReceiptExport({ tenants, meters, bills, rentPayments }: ReceiptE
   const waterAmount = waterBill?.total_amount || 0;
   const totalAmount = rentAmount + electricityAmount + waterAmount;
 
-  const handlePrint = () => {
+  const handlePrintAndSave = async () => {
     const printContent = receiptRef.current;
-    if (!printContent) return;
+    if (!printContent || !currentTenant) return;
 
+    setLoading(true);
+
+    // Create income transaction
+    if (onCreateTransaction && totalAmount > 0) {
+      const description = `Thu tiền nhà T${selectedMonth}/${selectedYear} - ${currentTenant.name}${currentTenant.room_name ? ` (${currentTenant.room_name})` : ''}`;
+      await onCreateTransaction(totalAmount, description);
+      toast({
+        title: 'Đã tạo giao dịch',
+        description: `Thu tiền: ${formatCurrency(totalAmount)}`,
+        duration: 3000,
+      });
+    }
+
+    // Print
     const printWindow = window.open('', '', 'width=800,height=600');
-    if (!printWindow) return;
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Phiếu thu tiền - ${currentTenant?.name || 'Người thuê'}</title>
+            <style>
+              body { font-family: 'Times New Roman', serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+              .header { text-align: center; margin-bottom: 20px; }
+              .title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
+              .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ccc; }
+              .total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; }
+              .signature { margin-top: 40px; display: flex; justify-content: space-between; }
+              .sig-box { text-align: center; width: 45%; }
+              .sig-line { margin-top: 60px; border-top: 1px solid #000; }
+              .blank-line { border-bottom: 1px dotted #000; min-width: 150px; display: inline-block; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Phiếu thu tiền - ${currentTenant?.name || 'Người thuê'}</title>
-          <style>
-            body { font-family: 'Times New Roman', serif; padding: 20px; max-width: 600px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .title { font-size: 18px; font-weight: bold; text-transform: uppercase; }
-            .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #ccc; }
-            .total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; }
-            .signature { margin-top: 40px; display: flex; justify-content: space-between; }
-            .sig-box { text-align: center; width: 45%; }
-            .sig-line { margin-top: 60px; border-top: 1px solid #000; }
-            .blank-line { border-bottom: 1px dotted #000; min-width: 150px; display: inline-block; }
-            @media print { body { margin: 0; } }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
+    setLoading(false);
   };
 
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -225,11 +250,25 @@ export function ReceiptExport({ tenants, meters, bills, rentPayments }: ReceiptE
             </div>
 
             <div className="flex gap-2 mt-6">
-              <Button onClick={handlePrint} className="flex-1">
-                <Printer className="h-4 w-4 mr-2" />
-                In phiếu thu
+              <Button 
+                onClick={handlePrintAndSave} 
+                className="flex-1"
+                disabled={loading || totalAmount === 0}
+              >
+                {loading ? (
+                  'Đang xử lý...'
+                ) : (
+                  <>
+                    <Printer className="h-4 w-4 mr-2" />
+                    In & Lưu giao dịch
+                  </>
+                )}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+              <CheckCircle2 className="h-3 w-3" />
+              Nhấn In sẽ tự động tạo giao dịch thu tiền
+            </p>
           </CardContent>
         </Card>
       )}
@@ -237,7 +276,8 @@ export function ReceiptExport({ tenants, meters, bills, rentPayments }: ReceiptE
       {!selectedTenant && (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Chọn người thuê để xem và in phiếu thu tiền
+            <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>Chọn người thuê để xem và in phiếu thu tiền</p>
           </CardContent>
         </Card>
       )}
