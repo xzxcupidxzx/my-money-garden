@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccountBalanceList } from '@/components/AccountBalanceList';
-import { ReconciliationTable } from '@/components/ReconciliationTable';
+import { ReconciliationCards } from '@/components/ReconciliationCards';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -249,11 +249,8 @@ export default function HistoryPage() {
 
         {/* Reconciliation Tab */}
         <TabsContent value="reconciliation" className="space-y-4">
-          {/* Account Balance List */}
-          <AccountBalanceList />
-
-          {/* Reconciliation Table */}
-          <ReconciliationTable onReconcile={handleReconcileComplete} />
+          {/* Quick Reconciliation Cards */}
+          <ReconciliationCards onReconcile={handleReconcileComplete} />
 
           {/* Reconciliation History */}
           <Card>
