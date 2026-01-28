@@ -105,64 +105,64 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
   };
 
   return (
-    <div className="flex flex-col h-full space-y-2">
-      {/* Transaction Type Tabs - Ultra Compact */}
-      <div className="flex gap-0.5 p-0.5 bg-muted/50 rounded-md">
+    <div className="flex flex-col h-full space-y-3">
+      {/* Transaction Type Tabs */}
+      <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
         <Button
           variant={type === 'expense' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-7 text-xs",
+            "flex-1 h-9",
             type === 'expense' && "bg-expense hover:bg-expense/90 text-expense-foreground"
           )}
           onClick={() => { setType('expense'); setCategoryId(''); }}
         >
-          <TrendingDown className="h-3 w-3 mr-1" />
+          <TrendingDown className="h-4 w-4 mr-1" />
           Chi
         </Button>
         <Button
           variant={type === 'income' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-7 text-xs",
+            "flex-1 h-9",
             type === 'income' && "bg-income hover:bg-income/90 text-income-foreground"
           )}
           onClick={() => { setType('income'); setCategoryId(''); }}
         >
-          <TrendingUp className="h-3 w-3 mr-1" />
+          <TrendingUp className="h-4 w-4 mr-1" />
           Thu
         </Button>
         <Button
           variant={type === 'transfer' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-7 text-xs",
+            "flex-1 h-9",
             type === 'transfer' && "bg-transfer hover:bg-transfer/90 text-transfer-foreground"
           )}
           onClick={() => { setType('transfer'); setCategoryId(''); }}
         >
-          <ArrowLeftRight className="h-3 w-3 mr-1" />
+          <ArrowLeftRight className="h-4 w-4 mr-1" />
           Chuyển
         </Button>
       </div>
 
-      {/* Form Fields - Ultra Compact Grid */}
-      <div className="grid grid-cols-2 gap-1.5">
+      {/* Form Fields - Compact Grid */}
+      <div className="grid grid-cols-2 gap-2">
         {type !== 'transfer' ? (
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Danh mục</Label>
+            <Label className="text-xs font-medium text-muted-foreground mb-1 block">Danh mục</Label>
             <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
-                <SelectValue placeholder="Chọn" />
+              <SelectTrigger className="h-10 bg-card/60 border-border/50">
+                <SelectValue placeholder="Chọn danh mục" />
               </SelectTrigger>
               <SelectContent>
                 {filteredCategories.map((cat) => {
                   const IconComponent = getCategoryIcon(cat.icon);
                   return (
                     <SelectItem key={cat.id} value={cat.id}>
-                      <div className="flex items-center gap-1.5">
-                        {IconComponent && <IconComponent className="h-3 w-3" style={{ color: cat.color || undefined }} />}
-                        <span className="text-xs">{cat.name}</span>
+                      <div className="flex items-center gap-2">
+                        {IconComponent && <IconComponent className="h-4 w-4" style={{ color: cat.color || undefined }} />}
+                        <span>{cat.name}</span>
                       </div>
                     </SelectItem>
                   );
@@ -172,15 +172,15 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
           </div>
         ) : (
           <div>
-            <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Từ TK</Label>
+            <Label className="text-xs font-medium text-muted-foreground mb-1 block">Từ TK</Label>
             <Select value={accountId} onValueChange={setAccountId}>
-              <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
-                <SelectValue placeholder="Chọn" />
+              <SelectTrigger className="h-10 bg-card/60 border-border/50">
+                <SelectValue placeholder="Chọn tài khoản" />
               </SelectTrigger>
               <SelectContent>
                 {accounts.map((acc) => (
                   <SelectItem key={acc.id} value={acc.id}>
-                    <span className="text-xs">{acc.name}</span>
+                    {acc.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -189,15 +189,15 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
         )}
 
         <div>
-          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">
+          <Label className="text-xs font-medium text-muted-foreground mb-1 block">
             {type === 'transfer' ? 'Đến TK' : 'Tài khoản'}
           </Label>
           <Select 
             value={type === 'transfer' ? toAccountId : accountId} 
             onValueChange={type === 'transfer' ? setToAccountId : setAccountId}
           >
-            <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
-              <SelectValue placeholder="Chọn" />
+            <SelectTrigger className="h-10 bg-card/60 border-border/50">
+              <SelectValue placeholder="Chọn tài khoản" />
             </SelectTrigger>
             <SelectContent>
               {(type === 'transfer' 
@@ -205,7 +205,7 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
                 : accounts
               ).map((acc) => (
                 <SelectItem key={acc.id} value={acc.id}>
-                  <span className="text-xs">{acc.name}</span>
+                  {acc.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -213,15 +213,15 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
         </div>
 
         <div>
-          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Ngày</Label>
+          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Ngày</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
-                className="w-full h-8 justify-start bg-card/60 border-border/50 font-normal text-xs px-2"
+                className="w-full h-10 justify-start bg-card/60 border-border/50 font-normal"
               >
-                <CalendarIcon className="mr-1.5 h-3 w-3 text-muted-foreground" />
-                <span className="font-mono text-xs">{format(date, 'dd/MM', { locale: vi })}</span>
+                <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span className="font-mono text-sm">{format(date, 'dd/MM', { locale: vi })}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -237,12 +237,12 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
         </div>
 
         <div>
-          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Mô tả</Label>
+          <Label className="text-xs font-medium text-muted-foreground mb-1 block">Mô tả</Label>
           <Input
             placeholder="Ghi chú..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="h-8 text-xs bg-card/60 border-border/50"
+            className="h-10 bg-card/60 border-border/50"
           />
         </div>
       </div>
@@ -257,13 +257,13 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
         />
       </div>
 
-      {/* Smart Reset Toggle - Ultra Minimal */}
-      <div className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded-md">
-        <span className="text-[10px] text-muted-foreground">Giữ danh mục</span>
+      {/* Smart Reset Toggle */}
+      <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
+        <span className="text-xs text-muted-foreground">Giữ danh mục khi thêm liên tiếp</span>
         <Switch 
           checked={smartReset} 
           onCheckedChange={setSmartReset}
-          className="scale-75"
+          className="scale-90"
         />
       </div>
     </div>
