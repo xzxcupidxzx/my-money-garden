@@ -12,7 +12,6 @@ import {
   Eye, 
   EyeOff, 
   Wallet, 
-  Download, 
   LogOut,
   CreditCard,
   Plus,
@@ -20,7 +19,9 @@ import {
   Bell,
   RefreshCw,
   Target,
-  ChevronRight
+  ChevronRight,
+  Scale,
+  HardDrive,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -160,6 +161,32 @@ export default function SettingsPage() {
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </Button>
           </Link>
+
+          <Link to="/reconciliation">
+            <Button variant="ghost" className="w-full justify-between">
+              <div className="flex items-center gap-3">
+                <Scale className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="font-medium">Đối soát Tài khoản</p>
+                  <p className="text-xs text-muted-foreground">So sánh số dư thực tế</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </Link>
+
+          <Link to="/backup">
+            <Button variant="ghost" className="w-full justify-between">
+              <div className="flex items-center gap-3">
+                <HardDrive className="h-5 w-5 text-muted-foreground" />
+                <div className="text-left">
+                  <p className="font-medium">Sao lưu & Khôi phục</p>
+                  <p className="text-xs text-muted-foreground">Save/Load dữ liệu</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
@@ -272,13 +299,9 @@ export default function SettingsPage() {
       {/* Data & Security */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Dữ liệu & Bảo mật</CardTitle>
+          <CardTitle className="text-lg">Bảo mật</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button variant="ghost" className="w-full justify-start">
-            <Download className="h-5 w-5 mr-3" />
-            Xuất dữ liệu (JSON/CSV)
-          </Button>
           <Button variant="ghost" className="w-full justify-start">
             <Shield className="h-5 w-5 mr-3" />
             Bảo mật tài khoản

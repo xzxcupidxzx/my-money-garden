@@ -317,6 +317,63 @@ export type Database = {
         }
         Relationships: []
       }
+      reconciliations: {
+        Row: {
+          account_id: string
+          actual_balance: number
+          adjustment_transaction_id: string | null
+          created_at: string
+          difference: number
+          id: string
+          notes: string | null
+          reconciliation_date: string
+          system_balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          actual_balance: number
+          adjustment_transaction_id?: string | null
+          created_at?: string
+          difference: number
+          id?: string
+          notes?: string | null
+          reconciliation_date?: string
+          system_balance: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          actual_balance?: number
+          adjustment_transaction_id?: string | null
+          created_at?: string
+          difference?: number
+          id?: string
+          notes?: string | null
+          reconciliation_date?: string
+          system_balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliations_adjustment_transaction_id_fkey"
+            columns: ["adjustment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recurring_transactions: {
         Row: {
           account_id: string

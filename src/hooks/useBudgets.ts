@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import type { Budget, Category, Transaction } from '@/types/finance';
 
-interface BudgetWithSpent extends Budget {
+export interface BudgetWithSpent extends Budget {
   spent: number;
   percentage: number;
   status: 'safe' | 'warning' | 'danger';

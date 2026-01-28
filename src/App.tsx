@@ -19,6 +19,8 @@ import NotFound from "./pages/NotFound";
 import Installments from "./pages/Installments";
 import Budgets from "./pages/Budgets";
 import RecurringTransactions from "./pages/RecurringTransactions";
+import Reconciliation from "./pages/Reconciliation";
+import DataBackup from "./pages/DataBackup";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +44,8 @@ const App = () => (
                 <Route path="/installments" element={<Installments />} />
                 <Route path="/budgets" element={<Budgets />} />
                 <Route path="/recurring" element={<RecurringTransactions />} />
+                <Route path="/reconciliation" element={<Reconciliation />} />
+                <Route path="/backup" element={<DataBackup />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
