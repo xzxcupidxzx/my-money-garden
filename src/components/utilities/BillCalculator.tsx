@@ -80,42 +80,56 @@ export function BillCalculator({
     }
     setCurrentReading('');
 
-    // Set default period based on tenant's move_in_date
     const selectedMeterData = meters.find(m => m.id === meterId);
-    if (selectedMeterData?.tenant_id) {
+    if (!selectedMeterData) return;
+
+    // Determine the start date - from tenant's move_in_date or meter's start_date
+    let startDateStr: string | null = null;
+    
+    if (selectedMeterData.tenant_id) {
+      // Tenant's meter - use move_in_date from tenant
       const tenant = tenants.find(t => t.id === selectedMeterData.tenant_id);
-      if (tenant?.move_in_date) {
-        const moveInDate = new Date(tenant.move_in_date);
-        const moveInDay = moveInDate.getDate(); // Day of month (e.g., 15)
-        const now = new Date();
-        
-        // Calculate the most recent billing cycle based on move_in_day
-        // If tenant moved in on 15th, billing cycles are: 15/1→15/2, 15/2→15/3, etc.
-        let periodStart: Date;
-        let periodEnd: Date;
-        
-        // Find the most recent "move_in_day" that has passed
-        const currentDay = now.getDate();
-        
-        if (currentDay >= moveInDay) {
-          // Current month's cycle: from this month's move_in_day to next month's
-          periodStart = new Date(now.getFullYear(), now.getMonth(), moveInDay);
-          periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, moveInDay);
-        } else {
-          // Previous month's cycle: from last month's move_in_day to this month's
-          periodStart = new Date(now.getFullYear(), now.getMonth() - 1, moveInDay);
-          periodEnd = new Date(now.getFullYear(), now.getMonth(), moveInDay);
-        }
-        
-        // Ensure period doesn't start before move_in_date
-        if (periodStart < moveInDate) {
-          periodStart = moveInDate;
-          periodEnd = new Date(moveInDate.getFullYear(), moveInDate.getMonth() + 1, moveInDay);
-        }
-        
-        setPeriodStart(periodStart);
-        setPeriodEnd(periodEnd);
+      startDateStr = tenant?.move_in_date || null;
+    } else if (selectedMeterData.is_main) {
+      // Main meter (landlord) - use start_date from meter
+      startDateStr = selectedMeterData.start_date || null;
+    }
+
+    if (startDateStr) {
+      const startDate = new Date(startDateStr);
+      const startDay = startDate.getDate(); // Day of month (e.g., 15)
+      const now = new Date();
+      
+      // Calculate the most recent billing cycle based on start_day
+      // If started on 15th, billing cycles are: 15/1→15/2, 15/2→15/3, etc.
+      let periodStart: Date;
+      let periodEnd: Date;
+      
+      const currentDay = now.getDate();
+      
+      if (currentDay >= startDay) {
+        // Current month's cycle: from this month's start_day to next month's
+        periodStart = new Date(now.getFullYear(), now.getMonth(), startDay);
+        periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, startDay);
+      } else {
+        // Previous month's cycle: from last month's start_day to this month's
+        periodStart = new Date(now.getFullYear(), now.getMonth() - 1, startDay);
+        periodEnd = new Date(now.getFullYear(), now.getMonth(), startDay);
       }
+      
+      // Ensure period doesn't start before the actual start date
+      if (periodStart < startDate) {
+        periodStart = startDate;
+        periodEnd = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDay);
+      }
+      
+      setPeriodStart(periodStart);
+      setPeriodEnd(periodEnd);
+    } else {
+      // No start date - use default period (first of last month to last of last month)
+      const period = getDefaultPeriod();
+      setPeriodStart(period.start);
+      setPeriodEnd(period.end);
     }
   };
   const handleSave = async () => {
