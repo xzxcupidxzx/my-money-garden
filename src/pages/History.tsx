@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,13 +6,13 @@ import { CurrencyDisplay } from '@/components/CurrencyDisplay';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useReconciliation } from '@/hooks/useReconciliation';
 import { useAccounts } from '@/hooks/useAccounts';
+import { useCategories } from '@/hooks/useCategories';
 import { useAuth } from '@/hooks/useAuth';
 import { ChevronLeft, ChevronRight, Calendar, Scale, History, CheckCircle2 } from 'lucide-react';
 import { format, addMonths, subMonths, getDaysInMonth, startOfMonth, getDay, parseISO, isSameDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,8 +30,10 @@ export default function HistoryPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [actualBalance, setActualBalance] = useState<number>(0);
   const { transactions, loading } = useTransactions(selectedDate);
+  const { categories } = useCategories();
   const { accounts } = useAccounts();
   const {
     reconciliations,
@@ -84,9 +86,15 @@ export default function HistoryPage() {
   const handleReconcile = async () => {
     if (!selectedAccountId) return;
     const systemBal = getSystemBalance(selectedAccountId);
-    await reconcileAccount(selectedAccountId, systemBal, actualBalance);
+    await reconcileAccount(selectedAccountId, systemBal, actualBalance, selectedCategoryId || undefined);
     setActualBalance(0);
+    setSelectedCategoryId(null);
   };
+
+  // Get categories based on difference direction
+  const relevantCategories = categories.filter(c => 
+    difference > 0 ? c.type === 'income' : c.type === 'expense'
+  );
 
   if (loading || authLoading) {
     return (
@@ -283,6 +291,24 @@ export default function HistoryPage() {
                       placeholder="Nhập số dư thực tế..."
                     />
                   </div>
+
+                  {difference !== 0 && (
+                    <div className="space-y-2">
+                      <Label>Danh mục điều chỉnh</Label>
+                      <Select value={selectedCategoryId || ''} onValueChange={setSelectedCategoryId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn danh mục (tùy chọn)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {relevantCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   <Button 
                     onClick={handleReconcile} 
