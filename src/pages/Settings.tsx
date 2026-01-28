@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { usePrivacy } from '@/hooks/usePrivacy';
+import { useDataBackup } from '@/hooks/useDataBackup';
+import { useToast } from '@/hooks/use-toast';
 import { ThemeColorPicker } from '@/components/settings/ThemeColorPicker';
 import { BackgroundPatternPicker } from '@/components/settings/BackgroundPatternPicker';
 import { 
@@ -12,6 +14,17 @@ import {
   DefaultAccountPicker,
   NotificationToggle 
 } from '@/components/settings/AppPreferencesPicker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { 
   User, 
   Moon, 
@@ -24,6 +37,7 @@ import {
   Scale,
   HardDrive,
   Tags,
+  Trash2,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -32,7 +46,29 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { privacyMode, togglePrivacy, profile, updateProfile } = usePrivacy();
+  const { deleteAllData, deleteAllSaveSlots, loading: backupLoading } = useDataBackup();
+  const { toast } = useToast();
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+
+  const handleDeleteAllData = async () => {
+    const success = await deleteAllData();
+    deleteAllSaveSlots(); // Also clear local saves
+    if (success) {
+      toast({
+        title: 'Đã xóa!',
+        description: 'Toàn bộ dữ liệu đã được xóa.',
+        duration: 1000,
+      });
+      // Reload to refresh all data
+      window.location.reload();
+    } else {
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể xóa dữ liệu. Vui lòng thử lại.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -210,6 +246,55 @@ export default function SettingsPage() {
             <Shield className="h-5 w-5 mr-3" />
             Bảo mật tài khoản
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="border-destructive/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg text-destructive">Vùng nguy hiểm</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="destructive" 
+                className="w-full"
+                disabled={backupLoading}
+              >
+                <Trash2 className="h-5 w-5 mr-2" />
+                Xóa toàn bộ dữ liệu
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Xác nhận xóa toàn bộ dữ liệu?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Hành động này sẽ xóa vĩnh viễn tất cả dữ liệu của bạn bao gồm:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Tất cả giao dịch</li>
+                    <li>Tài khoản & Danh mục</li>
+                    <li>Ngân sách & Trả góp</li>
+                    <li>Giao dịch định kỳ</li>
+                    <li>Dữ liệu điện nước & người thuê</li>
+                    <li>Các file lưu trữ local</li>
+                  </ul>
+                  <p className="mt-3 font-semibold text-destructive">
+                    Không thể hoàn tác! Hãy sao lưu trước khi xóa.
+                  </p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteAllData}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Xóa tất cả
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 
