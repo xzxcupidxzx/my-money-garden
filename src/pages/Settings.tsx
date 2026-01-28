@@ -6,6 +6,13 @@ import { usePrivacy } from '@/hooks/usePrivacy';
 import { ThemeColorPicker } from '@/components/settings/ThemeColorPicker';
 import { BackgroundPatternPicker } from '@/components/settings/BackgroundPatternPicker';
 import { 
+  FontSizePicker, 
+  NumberFormatPicker, 
+  WeekStartPicker, 
+  DefaultAccountPicker,
+  NotificationToggle 
+} from '@/components/settings/AppPreferencesPicker';
+import { 
   User, 
   Moon, 
   Sun, 
@@ -13,7 +20,6 @@ import {
   EyeOff, 
   LogOut,
   Shield,
-  Bell,
   ChevronRight,
   Scale,
   HardDrive,
@@ -128,10 +134,10 @@ export default function SettingsPage() {
       </Card>
 
 
-      {/* Preferences */}
+      {/* Appearance */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Tùy chọn</CardTitle>
+          <CardTitle className="text-lg">Giao diện</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Theme Toggle */}
@@ -139,7 +145,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               <div>
-                <p className="font-medium">Giao diện</p>
+                <p className="font-medium">Chế độ sáng/tối</p>
                 <p className="text-sm text-muted-foreground capitalize">{theme}</p>
               </div>
             </div>
@@ -153,6 +159,29 @@ export default function SettingsPage() {
 
           {/* Background Pattern Picker */}
           <BackgroundPatternPicker />
+
+          {/* Font Size */}
+          <FontSizePicker />
+        </CardContent>
+      </Card>
+
+      {/* Preferences */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Tùy chọn</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Number Format */}
+          <NumberFormatPicker />
+
+          {/* Week Start */}
+          <WeekStartPicker />
+
+          {/* Default Account */}
+          <DefaultAccountPicker />
+
+          {/* Notifications */}
+          <NotificationToggle />
 
           {/* Privacy Toggle */}
           <div className="flex items-center justify-between">
@@ -168,7 +197,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Data & Security */}
+      {/* Security */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg">Bảo mật</CardTitle>
@@ -177,10 +206,6 @@ export default function SettingsPage() {
           <Button variant="ghost" className="w-full justify-start">
             <Shield className="h-5 w-5 mr-3" />
             Bảo mật tài khoản
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <Bell className="h-5 w-5 mr-3" />
-            Thông báo
           </Button>
         </CardContent>
       </Card>
