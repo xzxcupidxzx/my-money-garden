@@ -61,6 +61,7 @@ export function useReconciliation() {
     accountId: string,
     systemBalance: number,
     actualBalance: number,
+    categoryId?: string,
     notes?: string
   ) => {
     if (!user) return null;
@@ -79,6 +80,7 @@ export function useReconciliation() {
             type: difference > 0 ? 'income' : 'expense',
             amount: Math.abs(difference),
             account_id: accountId,
+            category_id: categoryId || null,
             description: `Điều chỉnh đối soát: ${difference > 0 ? '+' : ''}${difference.toLocaleString()} VND`,
             date: new Date().toISOString(),
             is_recurring: false,
