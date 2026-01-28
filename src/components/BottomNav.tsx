@@ -3,7 +3,7 @@ import {
   LayoutDashboard, 
   History, 
   PieChart, 
-  Tags, 
+  Briefcase, 
   Settings,
   Sparkles
 } from 'lucide-react';
@@ -14,7 +14,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Giao dịch' },
   { to: '/history', icon: History, label: 'Lịch sử' },
   { to: '/statistics', icon: PieChart, label: 'Thống kê' },
-  { to: '/categories', icon: Tags, label: 'Danh mục' },
+  { to: '/management', icon: Briefcase, label: 'Quản lý' },
   { to: '/settings', icon: Settings, label: 'Cài đặt' },
 ];
 

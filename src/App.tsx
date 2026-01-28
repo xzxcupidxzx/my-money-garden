@@ -21,6 +21,7 @@ import Budgets from "./pages/Budgets";
 import RecurringTransactions from "./pages/RecurringTransactions";
 import Reconciliation from "./pages/Reconciliation";
 import DataBackup from "./pages/DataBackup";
+import Management from "./pages/Management";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/" element={<Transactions />} />
                 <Route path="/history" element={<History />} />
                 <Route path="/statistics" element={<Statistics />} />
+                <Route path="/management" element={<Management />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/ai-note" element={<AiNote />} />
