@@ -25,6 +25,7 @@ export interface UtilityMeter {
   is_main: boolean;
   is_active: boolean;
   tenant_id: string | null;
+  start_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -264,7 +265,7 @@ export function useUtilities() {
   };
 
   // Meter operations
-  const addMeter = async (data: { name: string; type: 'electricity' | 'water'; is_main: boolean; tenant_id?: string | null }) => {
+  const addMeter = async (data: { name: string; type: 'electricity' | 'water'; is_main: boolean; tenant_id?: string | null; start_date?: string | null }) => {
     if (!user) return null;
     const { data: newMeter, error } = await supabase
       .from('utility_meters')

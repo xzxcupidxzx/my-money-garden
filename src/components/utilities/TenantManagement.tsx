@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, CalendarIcon } from 'lucide-react';
+import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, CalendarIcon, Clock } from 'lucide-react';
 import { formatCurrency } from '@/components/CurrencyDisplay';
 import { Tenant, UtilityMeter, UtilityBill } from '@/hooks/useUtilities';
 import { format } from 'date-fns';
@@ -155,6 +155,34 @@ export function TenantManagement({
       electricityReading: electricityMeter ? getLastReading(electricityMeter.id) : null,
       waterReading: waterMeter ? getLastReading(waterMeter.id) : null,
     };
+  };
+
+  // Calculate next billing period based on move_in_date
+  const getNextBillingPeriod = (moveInDate: string | null): { start: Date; end: Date } | null => {
+    if (!moveInDate) return null;
+    
+    const startDate = new Date(moveInDate);
+    const startDay = startDate.getDate();
+    const now = new Date();
+    const currentDay = now.getDate();
+    
+    let periodStart: Date;
+    let periodEnd: Date;
+    
+    if (currentDay >= startDay) {
+      periodStart = new Date(now.getFullYear(), now.getMonth(), startDay);
+      periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, startDay);
+    } else {
+      periodStart = new Date(now.getFullYear(), now.getMonth() - 1, startDay);
+      periodEnd = new Date(now.getFullYear(), now.getMonth(), startDay);
+    }
+    
+    if (periodStart < startDate) {
+      periodStart = startDate;
+      periodEnd = new Date(startDate.getFullYear(), startDate.getMonth() + 1, startDay);
+    }
+    
+    return { start: periodStart, end: periodEnd };
   };
 
   return (
@@ -374,6 +402,7 @@ export function TenantManagement({
         <div className="space-y-3">
           {tenants.map(tenant => {
             const utils = getTenantUtilities(tenant.id);
+            const nextPeriod = getNextBillingPeriod(tenant.move_in_date);
             return (
               <Card key={tenant.id} className={!tenant.is_active ? 'opacity-60' : ''}>
                 <CardContent className="p-4">
@@ -404,6 +433,14 @@ export function TenantManagement({
                           </span>
                         )}
                       </div>
+
+                      {/* Next billing period */}
+                      {nextPeriod && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1 mb-2">
+                          <Clock className="h-3 w-3" />
+                          <span>Kỳ tiếp: {format(nextPeriod.start, 'dd/MM')} → {format(nextPeriod.end, 'dd/MM/yyyy')}</span>
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-2 gap-2 mt-2">
                         {/* Electricity */}

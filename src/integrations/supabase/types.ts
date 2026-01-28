@@ -688,6 +688,7 @@ export type Database = {
           is_active: boolean | null
           is_main: boolean | null
           name: string
+          start_date: string | null
           tenant_id: string | null
           type: string
           updated_at: string | null
@@ -699,6 +700,7 @@ export type Database = {
           is_active?: boolean | null
           is_main?: boolean | null
           name: string
+          start_date?: string | null
           tenant_id?: string | null
           type: string
           updated_at?: string | null
@@ -710,6 +712,7 @@ export type Database = {
           is_active?: boolean | null
           is_main?: boolean | null
           name?: string
+          start_date?: string | null
           tenant_id?: string | null
           type?: string
           updated_at?: string | null
