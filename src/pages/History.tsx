@@ -7,23 +7,27 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useReconciliation } from '@/hooks/useReconciliation';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, addMonths, subMonths, getDaysInMonth, startOfMonth, getDay, parseISO, isSameDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AccountBalanceList } from '@/components/AccountBalanceList';
 import { ReconciliationCards } from '@/components/ReconciliationCards';
+import { AVAILABLE_ICONS } from '@/components/categories/IconPicker';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [showAccounts, setShowAccounts] = useState(true);
   const { transactions, summary, loading } = useTransactions(selectedDate);
-  const { accounts, refetch: refetchAccounts } = useAccounts();
+  const { accounts, refetch: refetchAccounts, totalBalance } = useAccounts();
   const { reconciliations, loading: reconciliationLoading, refetch: refetchReconciliations } = useReconciliation();
+  
+  const activeAccounts = accounts.filter(a => a.is_active);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -79,6 +83,72 @@ export default function HistoryPage() {
   return (
     <div className="p-4 space-y-4 pb-24">
       <h1 className="text-2xl font-bold">Lịch sử</h1>
+
+      {/* Account Balance Section */}
+      <Collapsible open={showAccounts} onOpenChange={setShowAccounts}>
+        <Card>
+          <CardHeader className="pb-2">
+            <CollapsibleTrigger asChild>
+              <div className="flex items-center justify-between cursor-pointer">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Tài khoản
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "font-bold",
+                    totalBalance >= 0 ? "text-income" : "text-expense"
+                  )}>
+                    <CurrencyDisplay amount={totalBalance} />
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    {showAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {activeAccounts.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  Chưa có tài khoản nào
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {activeAccounts.map((account) => {
+                    const IconComponent = account.icon && AVAILABLE_ICONS[account.icon] 
+                      ? AVAILABLE_ICONS[account.icon] 
+                      : Wallet;
+                    return (
+                      <div
+                        key={account.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/30"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="h-10 w-10 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: `${account.color || '#64748b'}20` }}
+                          >
+                            <IconComponent className="h-5 w-5" style={{ color: account.color || '#64748b' }} />
+                          </div>
+                          <span className="font-medium">{account.name}</span>
+                        </div>
+                        <span className={cn(
+                          "font-bold",
+                          Number(account.balance) >= 0 ? "text-income" : "text-expense"
+                        )}>
+                          <CurrencyDisplay amount={account.balance} />
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
