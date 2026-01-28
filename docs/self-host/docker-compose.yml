@@ -30,7 +30,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-secure-password}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:
-      - ./volumes/db/data:/var/lib/postgresql/data
+      - ./.data/db:/var/lib/postgresql/data
+      - ./.data/backups:/backups
       - ./docs/self-host/01-database-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -168,7 +169,7 @@ services:
       ENABLE_IMAGE_TRANSFORMATION: "true"
       IMGPROXY_URL: http://imgproxy:5001
     volumes:
-      - ./volumes/storage:/var/lib/storage
+      - ./.data/storage:/var/lib/storage
     depends_on:
       db:
         condition: service_healthy
@@ -240,8 +241,9 @@ services:
       - kong
 
 # ============================================
-# VOLUMES
+# NOTES
 # ============================================
-volumes:
-  db-data:
-  storage-data:
+# All data is stored in .data folder:
+# - .data/db/         PostgreSQL data
+# - .data/storage/    File uploads
+# - .data/backups/    Database backups

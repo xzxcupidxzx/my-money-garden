@@ -87,11 +87,14 @@ Sau đó import vào self-hosted database.
 ## Backup
 
 ```bash
-# Backup database
-docker exec finance-db pg_dump -U postgres postgres > backup_$(date +%Y%m%d).sql
+# Backup database vào folder .data/backups
+docker exec finance-db pg_dump -U postgres postgres > .data/backups/backup_$(date +%Y%m%d).sql
 
-# Restore
-docker exec -i finance-db psql -U postgres postgres < backup_20240101.sql
+# Restore từ backup
+docker exec -i finance-db psql -U postgres postgres < .data/backups/backup_20240101.sql
+
+# Backup toàn bộ folder .data (recommended)
+tar -czvf finance-backup-$(date +%Y%m%d).tar.gz .data/
 ```
 
 ## Troubleshooting
@@ -120,9 +123,41 @@ your-nas/
 │   ├── docker-compose.yml
 │   ├── .env
 │   ├── Dockerfile
-│   └── volumes/
-│       ├── db/data/          # PostgreSQL data
-│       └── storage/          # File storage
+│   └── .data/                    # ← Folder ẩn chứa toàn bộ data
+│       ├── db/                   # PostgreSQL data
+│       ├── storage/              # File uploads
+│       └── backups/              # Database backups
+│           ├── backup_20240101.sql
+│           ├── backup_20240102.sql
+│           └── ...
+```
+
+## Auto Backup Script
+
+Tạo file `backup.sh` trong thư mục `finance-app`:
+
+```bash
+#!/bin/bash
+# Auto backup database to .data/backups folder
+# Run daily via cron: 0 2 * * * /path/to/finance-app/backup.sh
+
+BACKUP_DIR=".data/backups"
+KEEP_DAYS=7
+
+# Create backup
+docker exec finance-db pg_dump -U postgres postgres > "$BACKUP_DIR/backup_$(date +%Y%m%d_%H%M%S).sql"
+
+# Remove old backups (keep last 7 days)
+find "$BACKUP_DIR" -name "backup_*.sql" -mtime +$KEEP_DAYS -delete
+
+echo "Backup completed: $(date)"
+```
+
+Cấu hình cron job:
+```bash
+chmod +x backup.sh
+crontab -e
+# Thêm dòng: 0 2 * * * /path/to/finance-app/backup.sh
 ```
 
 ## Về Authentication với Cloudflare Zero Trust
