@@ -170,7 +170,10 @@ export default function StatisticsPage() {
 
   return (
     <div className="p-4 space-y-4 pb-24">
-      <h1 className="text-2xl font-bold">Thống kê</h1>
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary rounded-full" />
+        <h1 className="text-2xl font-bold">Thống kê</h1>
+      </div>
 
       {/* Date Range Filter */}
       <DateRangeFilter
@@ -183,37 +186,37 @@ export default function StatisticsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="bg-income/10 border-0">
+        <Card className="bg-income/10 border-income/20 backdrop-blur-sm">
           <CardContent className="p-3">
             <div className="flex items-center gap-1 mb-1">
               <TrendingUp className="h-3 w-3 text-income" />
-              <span className="text-xs text-muted-foreground">Thu</span>
+              <span className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Thu</span>
             </div>
-            <p className="text-sm font-bold text-income">
+            <p className="text-sm font-bold text-income font-mono tabular-nums">
               <CurrencyDisplay amount={summary.income} />
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-expense/10 border-0">
+        <Card className="bg-expense/10 border-expense/20 backdrop-blur-sm">
           <CardContent className="p-3">
             <div className="flex items-center gap-1 mb-1">
               <TrendingDown className="h-3 w-3 text-expense" />
-              <span className="text-xs text-muted-foreground">Chi</span>
+              <span className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Chi</span>
             </div>
-            <p className="text-sm font-bold text-expense">
+            <p className="text-sm font-bold text-expense font-mono tabular-nums">
               <CurrencyDisplay amount={summary.expense} />
             </p>
           </CardContent>
         </Card>
 
-        <Card className={`${summary.balance >= 0 ? 'bg-income/10' : 'bg-expense/10'} border-0`}>
+        <Card className={`${summary.balance >= 0 ? 'bg-income/10 border-income/20' : 'bg-expense/10 border-expense/20'} backdrop-blur-sm`}>
           <CardContent className="p-3">
             <div className="flex items-center gap-1 mb-1">
               <Wallet className="h-3 w-3" />
-              <span className="text-xs text-muted-foreground">Ròng</span>
+              <span className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Ròng</span>
             </div>
-            <p className={`text-sm font-bold ${summary.balance >= 0 ? 'text-income' : 'text-expense'}`}>
+            <p className={`text-sm font-bold font-mono tabular-nums ${summary.balance >= 0 ? 'text-income' : 'text-expense'}`}>
               {summary.balance >= 0 ? '+' : ''}<CurrencyDisplay amount={summary.balance} />
             </p>
           </CardContent>
@@ -265,25 +268,33 @@ export default function StatisticsPage() {
       )}
 
       {/* 7-Day Trend */}
-      <Card>
+      <Card className="card-technical">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            7 ngày gần đây (nghìn ₫)
+            <span>7 ngày gần đây</span>
+            <span className="text-xs font-mono text-muted-foreground ml-auto">(nghìn ₫)</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trendData}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 12, fontFamily: 'JetBrains Mono' }}
+                />
                 <YAxis hide />
                 <Tooltip
                   formatter={(value: number) => formatCurrency(value * 1000)}
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
+                    backgroundColor: 'hsl(var(--card) / 0.95)',
+                    backdropFilter: 'blur(8px)',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
+                    fontFamily: 'JetBrains Mono',
                   }}
                 />
                 <Bar dataKey="income" fill="hsl(var(--income))" radius={[4, 4, 0, 0]} />
@@ -294,11 +305,11 @@ export default function StatisticsPage() {
           <div className="flex justify-center gap-6 mt-2">
             <div className="flex items-center gap-2 text-sm">
               <div className="h-3 w-3 rounded bg-income" />
-              <span className="text-muted-foreground">Thu</span>
+              <span className="text-muted-foreground font-mono text-xs">Thu</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="h-3 w-3 rounded bg-expense" />
-              <span className="text-muted-foreground">Chi</span>
+              <span className="text-muted-foreground font-mono text-xs">Chi</span>
             </div>
           </div>
         </CardContent>

@@ -256,7 +256,10 @@ export default function HistoryPage() {
 
   return (
     <div className="p-4 space-y-4 pb-24">
-      <h1 className="text-2xl font-bold">Lịch sử</h1>
+      <div className="flex items-center gap-2">
+        <div className="w-1 h-6 bg-primary rounded-full" />
+        <h1 className="text-2xl font-bold">Lịch sử</h1>
+      </div>
 
       <Tabs defaultValue="calendar" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -273,13 +276,13 @@ export default function HistoryPage() {
         {/* Calendar Tab */}
         <TabsContent value="calendar" className="space-y-4">
           {/* Month Navigation with Summary */}
-          <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-0">
+          <Card className="bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <Button variant="secondary" size="icon" onClick={handlePrevMonth}>
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <h2 className="font-bold text-lg">
+                <h2 className="font-bold text-lg font-mono">
                   {format(selectedDate, 'MMMM yyyy', { locale: vi })}
                 </h2>
                 <Button variant="secondary" size="icon" onClick={handleNextMonth}>
@@ -289,15 +292,15 @@ export default function HistoryPage() {
 
               {/* Month Summary */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-card/60">
-                  <p className="text-xs text-muted-foreground">Tổng thu nhập</p>
-                  <p className="text-lg font-bold text-income">
+                <div className="p-3 rounded-lg bg-card/60 backdrop-blur-sm border border-income/20">
+                  <p className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Tổng thu nhập</p>
+                  <p className="text-lg font-bold text-income font-mono tabular-nums">
                     <CurrencyDisplay amount={summary.income} />
                   </p>
                 </div>
-                <div className="p-3 rounded-lg bg-card/60">
-                  <p className="text-xs text-muted-foreground">Tổng đã chi</p>
-                  <p className="text-lg font-bold text-expense">
+                <div className="p-3 rounded-lg bg-card/60 backdrop-blur-sm border border-expense/20">
+                  <p className="text-xs text-muted-foreground font-mono uppercase tracking-wider">Tổng đã chi</p>
+                  <p className="text-lg font-bold text-expense font-mono tabular-nums">
                     <CurrencyDisplay amount={summary.expense} />
                   </p>
                 </div>
@@ -306,12 +309,12 @@ export default function HistoryPage() {
           </Card>
 
           {/* Calendar */}
-          <Card>
+          <Card className="card-technical">
             <CardContent className="p-4">
               {/* Week days header */}
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {weekDays.map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                  <div key={day} className="text-center text-xs font-mono font-medium text-muted-foreground py-2">
                     {day}
                   </div>
                 ))}
