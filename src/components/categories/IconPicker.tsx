@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import {
   Briefcase,
   Gift,
@@ -119,41 +119,45 @@ interface IconPickerProps {
   color?: string;
 }
 
-export function IconPicker({ value, onChange, color = '#64748b' }: IconPickerProps) {
-  const [open, setOpen] = useState(false);
-  const SelectedIcon = AVAILABLE_ICONS[value] || MoreHorizontal;
+export const IconPicker = forwardRef<HTMLDivElement, IconPickerProps>(
+  function IconPicker({ value, onChange, color = '#64748b' }, ref) {
+    const [open, setOpen] = useState(false);
+    const SelectedIcon = AVAILABLE_ICONS[value] || MoreHorizontal;
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-12 w-12 rounded-full"
-          style={{ backgroundColor: `${color}20` }}
-        >
-          <SelectedIcon className="h-6 w-6" style={{ color }} />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-2" align="start">
-        <div className="grid grid-cols-6 gap-1">
-          {Object.entries(AVAILABLE_ICONS).map(([name, Icon]) => (
-            <button
-              key={name}
-              onClick={() => {
-                onChange(name);
-                setOpen(false);
-              }}
-              className={cn(
-                "h-9 w-9 rounded-lg flex items-center justify-center transition-colors hover:bg-muted",
-                value === name && "bg-primary/10 ring-2 ring-primary"
-              )}
+    return (
+      <div ref={ref}>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 w-12 rounded-full"
+              style={{ backgroundColor: `${color}20` }}
             >
-              <Icon className="h-5 w-5" style={{ color }} />
-            </button>
-          ))}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
+              <SelectedIcon className="h-6 w-6" style={{ color }} />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-2" align="start">
+            <div className="grid grid-cols-6 gap-1">
+              {Object.entries(AVAILABLE_ICONS).map(([name, Icon]) => (
+                <button
+                  key={name}
+                  onClick={() => {
+                    onChange(name);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    "h-9 w-9 rounded-lg flex items-center justify-center transition-colors hover:bg-muted",
+                    value === name && "bg-primary/10 ring-2 ring-primary"
+                  )}
+                >
+                  <Icon className="h-5 w-5" style={{ color }} />
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  }
+);

@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CurrencyDisplay } from './CurrencyDisplay';
-import { TrendingUp, TrendingDown, ArrowLeftRight, Trash2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowLeftRight, Trash2, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -21,6 +21,7 @@ import {
 interface TransactionListProps {
   groupedTransactions: DailyTransaction[];
   onDelete?: (id: string) => void;
+  onEdit?: (transaction: Transaction) => void;
 }
 
 function TransactionIcon({ type }: { type: Transaction['type'] }) {
@@ -34,10 +35,19 @@ function TransactionIcon({ type }: { type: Transaction['type'] }) {
   }
 }
 
-function TransactionItem({ transaction, onDelete }: { transaction: Transaction; onDelete?: (id: string) => void }) {
+interface TransactionItemProps {
+  transaction: Transaction;
+  onDelete?: (id: string) => void;
+  onEdit?: (transaction: Transaction) => void;
+}
+
+function TransactionItem({ transaction, onDelete, onEdit }: TransactionItemProps) {
   return (
     <div className="flex items-center justify-between py-3 px-1">
-      <div className="flex items-center gap-3">
+      <div 
+        className="flex items-center gap-3 flex-1 cursor-pointer"
+        onClick={() => onEdit?.(transaction)}
+      >
         <div className={cn(
           "p-2 rounded-full",
           transaction.type === 'income' && "bg-income/10",
@@ -71,6 +81,17 @@ function TransactionItem({ transaction, onDelete }: { transaction: Transaction; 
           <CurrencyDisplay amount={Number(transaction.amount)} />
         </p>
 
+        {onEdit && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => onEdit(transaction)}
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
+
         {onDelete && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -102,7 +123,7 @@ function TransactionItem({ transaction, onDelete }: { transaction: Transaction; 
   );
 }
 
-export function TransactionList({ groupedTransactions, onDelete }: TransactionListProps) {
+export function TransactionList({ groupedTransactions, onDelete, onEdit }: TransactionListProps) {
   if (groupedTransactions.length === 0) {
     return (
       <Card className="border-dashed">
@@ -117,7 +138,7 @@ export function TransactionList({ groupedTransactions, onDelete }: TransactionLi
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       {groupedTransactions.map((group) => (
         <Card key={group.date}>
           <CardContent className="p-4">
@@ -145,6 +166,7 @@ export function TransactionList({ groupedTransactions, onDelete }: TransactionLi
                   key={transaction.id}
                   transaction={transaction}
                   onDelete={onDelete}
+                  onEdit={onEdit}
                 />
               ))}
             </div>
