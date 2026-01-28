@@ -1,4 +1,3 @@
-import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Delete, Check } from 'lucide-react';
@@ -18,12 +17,15 @@ export function VirtualKeypad({ value, onChange, onSubmit, maxLength = 15, disab
       return;
     }
 
-    if (key === 'clear') {
-      onChange('');
+    if (key === '.' && value.includes('.')) {
       return;
     }
 
-    if (key === '.' && value.includes('.')) {
+    // Handle 000 key
+    if (key === '000') {
+      if (value === '' || value === '0') return;
+      if (value.length + 3 > maxLength) return;
+      onChange(value + '000');
       return;
     }
 
@@ -40,54 +42,52 @@ export function VirtualKeypad({ value, onChange, onSubmit, maxLength = 15, disab
     onChange(value + key);
   };
 
-  const keys = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-    ['.', '0', 'backspace'],
-  ];
-
   return (
-    <div className="space-y-2">
-      {/* Amount Display - Compact */}
-      <div className="bg-card/80 backdrop-blur-sm rounded-lg p-2 border border-border/50">
-        <p className="text-center text-xl font-mono tabular-nums text-foreground min-h-[1.5rem]">
+    <div className="space-y-3">
+      {/* Amount Display */}
+      <div className="bg-card/80 backdrop-blur-sm rounded-xl p-3 border border-border/50">
+        <p className="text-center text-2xl font-mono tabular-nums text-foreground min-h-[2rem]">
           {value || '0'}
         </p>
       </div>
 
-      {/* Virtual keypad - Compact */}
-      <div className="bg-card/60 backdrop-blur-sm rounded-lg p-2 border border-border/30">
-        <div className="grid grid-cols-4 gap-1">
-          {keys.map((row, rowIdx) => (
-            row.map((key) => (
-              <Button
-                key={key}
-                variant="ghost"
-                type="button"
-                className={cn(
-                  "h-10 text-base font-semibold rounded-lg transition-all active:scale-95",
-                  "bg-transparent hover:bg-muted/50 active:bg-muted",
-                  key === 'backspace' && "text-muted-foreground"
-                )}
-                onClick={() => handlePress(key)}
-              >
-                {key === 'backspace' ? <Delete className="h-4 w-4" /> : key}
-              </Button>
-            ))
-          ))}
-          {/* Submit button in the 4th column */}
+      {/* Virtual keypad */}
+      <div className="bg-card/60 backdrop-blur-sm rounded-xl p-2 border border-border/30">
+        <div className="grid grid-cols-4 gap-1.5">
+          {/* Row 1: 1, 2, 3, Submit */}
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('1')}>1</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('2')}>2</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('3')}>3</Button>
           {onSubmit && (
             <Button
-              className="h-10 bg-income hover:bg-income/90 text-income-foreground font-semibold rounded-lg transition-all active:scale-[0.98] row-span-4"
-              style={{ gridRow: '1 / 5', gridColumn: '4' }}
+              className="h-full bg-income hover:bg-income/90 text-income-foreground font-semibold rounded-xl active:scale-[0.98] row-span-5"
               type="button"
               onClick={onSubmit}
               disabled={disabled || !value || value === '0'}
             >
-              <Check className="h-4 w-4" />
+              <Check className="h-6 w-6" />
             </Button>
           )}
+          
+          {/* Row 2: 4, 5, 6 */}
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('4')}>4</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('5')}>5</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('6')}>6</Button>
+          
+          {/* Row 3: 7, 8, 9 */}
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('7')}>7</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('8')}>8</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('9')}>9</Button>
+          
+          {/* Row 4: 000, 0, . */}
+          <Button variant="ghost" type="button" className="h-12 text-base font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('000')}>000</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('0')}>0</Button>
+          <Button variant="ghost" type="button" className="h-12 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50" onClick={() => handlePress('.')}>.</Button>
+          
+          {/* Row 5: Backspace spans 3 columns */}
+          <Button variant="ghost" type="button" className="h-12 col-span-3 text-lg font-semibold rounded-xl active:scale-95 bg-transparent hover:bg-muted/50 text-muted-foreground" onClick={() => handlePress('backspace')}>
+            <Delete className="h-5 w-5" />
+          </Button>
         </div>
       </div>
     </div>
