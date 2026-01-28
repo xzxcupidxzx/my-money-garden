@@ -1,18 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CurrencyDisplay, formatCurrency } from '@/components/CurrencyDisplay';
 import { useTransactions } from '@/hooks/useTransactions';
-import { useCategories } from '@/hooks/useCategories';
+import { useBudgets } from '@/hooks/useBudgets';
 import { useAuth } from '@/hooks/useAuth';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
-import { format, addMonths, subMonths, subDays, parseISO, isWithinInterval, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addMonths, subMonths, subDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
 import {
   PieChart,
   Pie,
@@ -23,9 +23,10 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
 } from 'recharts';
-import type { CategoryBreakdown } from '@/types/finance';
+import { MonthComparison } from '@/components/statistics/MonthComparison';
+import { BudgetOverview } from '@/components/statistics/BudgetOverview';
+import type { Transaction } from '@/types/finance';
 
 const COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#eab308', '#ec4899', '#14b8a6', '#64748b'];
 
@@ -34,13 +35,40 @@ export default function StatisticsPage() {
   const { user, loading: authLoading } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { transactions, summary, loading } = useTransactions(selectedDate);
-  const { categories } = useCategories();
+  const { budgets, loading: budgetsLoading } = useBudgets(selectedDate);
+  const [lastMonthTransactions, setLastMonthTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [user, authLoading, navigate]);
+
+  // Fetch last month's transactions for comparison
+  useEffect(() => {
+    const fetchLastMonth = async () => {
+      if (!user) return;
+      
+      const lastMonth = subMonths(selectedDate, 1);
+      const monthStart = startOfMonth(lastMonth);
+      const monthEnd = endOfMonth(lastMonth);
+
+      const { data } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          category:categories(*),
+          account:accounts!transactions_account_id_fkey(*)
+        `)
+        .eq('user_id', user.id)
+        .gte('date', monthStart.toISOString())
+        .lte('date', monthEnd.toISOString());
+
+      setLastMonthTransactions((data || []) as Transaction[]);
+    };
+
+    fetchLastMonth();
+  }, [user, selectedDate]);
 
   const handlePrevMonth = () => setSelectedDate(subMonths(selectedDate, 1));
   const handleNextMonth = () => setSelectedDate(addMonths(selectedDate, 1));
@@ -95,7 +123,7 @@ export default function StatisticsPage() {
 
       data.push({
         name: format(date, 'EEE', { locale: vi }),
-        income: income / 1000, // Convert to thousands
+        income: income / 1000,
         expense: expense / 1000,
       });
     }
@@ -112,6 +140,9 @@ export default function StatisticsPage() {
       </div>
     );
   }
+
+  const currentMonthLabel = format(selectedDate, 'MMMM', { locale: vi });
+  const lastMonthLabel = format(subMonths(selectedDate, 1), 'MMMM', { locale: vi });
 
   return (
     <div className="p-4 space-y-4 pb-24">
@@ -156,6 +187,17 @@ export default function StatisticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Budget Overview */}
+      <BudgetOverview budgets={budgets} loading={budgetsLoading} />
+
+      {/* Month Comparison */}
+      <MonthComparison
+        currentMonthTransactions={transactions}
+        lastMonthTransactions={lastMonthTransactions}
+        currentMonthLabel={currentMonthLabel}
+        lastMonthLabel={lastMonthLabel}
+      />
 
       {/* Category Breakdown Pie Chart */}
       {categoryBreakdown.length > 0 && (
