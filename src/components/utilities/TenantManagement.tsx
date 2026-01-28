@@ -5,9 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Trash2, Edit2, Home, Phone, Zap, Droplets } from 'lucide-react';
+import { Users, Plus, Trash2, Edit2, Phone, Zap, Droplets, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '@/components/CurrencyDisplay';
 import { Tenant, UtilityMeter, UtilityBill } from '@/hooks/useUtilities';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TenantManagementProps {
   tenants: Tenant[];
@@ -16,6 +26,7 @@ interface TenantManagementProps {
   onAddTenant: (data: Partial<Tenant>) => Promise<Tenant | null>;
   onUpdateTenant: (id: string, data: Partial<Tenant>) => Promise<boolean>;
   onDeleteTenant: (id: string) => Promise<boolean>;
+  onAddMeter: (data: { name: string; type: 'electricity' | 'water'; is_main: boolean; tenant_id?: string | null }) => Promise<any>;
   getLastReading: (meterId: string) => number | null;
 }
 
@@ -26,10 +37,13 @@ export function TenantManagement({
   onAddTenant,
   onUpdateTenant,
   onDeleteTenant,
+  onAddMeter,
   getLastReading,
 }: TenantManagementProps) {
   const [showAdd, setShowAdd] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -43,18 +57,44 @@ export function TenantManagement({
 
   const handleAdd = async () => {
     if (!formData.name) return;
-    await onAddTenant({
+    setLoading(true);
+    
+    // 1. Create tenant first
+    const newTenant = await onAddTenant({
       name: formData.name,
       phone: formData.phone || null,
       room_name: formData.room_name || null,
       monthly_rent: parseFloat(formData.monthly_rent) || 0,
     });
+
+    // 2. Auto-create electricity and water meters for this tenant
+    if (newTenant) {
+      const meterPrefix = formData.room_name || formData.name;
+      
+      await Promise.all([
+        onAddMeter({
+          name: `Điện - ${meterPrefix}`,
+          type: 'electricity',
+          is_main: false,
+          tenant_id: newTenant.id,
+        }),
+        onAddMeter({
+          name: `Nước - ${meterPrefix}`,
+          type: 'water',
+          is_main: false,
+          tenant_id: newTenant.id,
+        }),
+      ]);
+    }
+
     resetForm();
     setShowAdd(false);
+    setLoading(false);
   };
 
   const handleUpdate = async () => {
     if (!editingTenant) return;
+    setLoading(true);
     await onUpdateTenant(editingTenant.id, {
       name: formData.name,
       phone: formData.phone || null,
@@ -63,6 +103,12 @@ export function TenantManagement({
     });
     setEditingTenant(null);
     resetForm();
+    setLoading(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    await onDeleteTenant(id);
+    setDeleteConfirm(null);
   };
 
   const startEdit = (tenant: Tenant) => {
@@ -91,55 +137,57 @@ export function TenantManagement({
       waterMeter,
       electricityBill: getLatestBill(electricityMeter?.id),
       waterBill: getLatestBill(waterMeter?.id),
+      electricityReading: electricityMeter ? getLastReading(electricityMeter.id) : null,
+      waterReading: waterMeter ? getLastReading(waterMeter.id) : null,
     };
   };
 
-  // Get main meters (no tenant)
-  const mainMeters = meters.filter(m => !m.tenant_id && m.is_main);
+  const TenantForm = ({ onSubmit, submitLabel }: { onSubmit: () => void; submitLabel: string }) => (
+    <div className="space-y-4">
+      <div>
+        <Label>Tên người thuê *</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="VD: Nguyễn Văn A"
+        />
+      </div>
+      <div>
+        <Label>Phòng / Tên gọi</Label>
+        <Input
+          value={formData.room_name}
+          onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
+          placeholder="VD: Phòng 1, Tầng trệt..."
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Đồng hồ điện/nước sẽ tự động được tạo theo tên này
+        </p>
+      </div>
+      <div>
+        <Label>Số điện thoại</Label>
+        <Input
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          placeholder="VD: 0901234567"
+        />
+      </div>
+      <div>
+        <Label>Tiền thuê hàng tháng (VND)</Label>
+        <Input
+          type="number"
+          value={formData.monthly_rent}
+          onChange={(e) => setFormData({ ...formData, monthly_rent: e.target.value })}
+          placeholder="VD: 3000000"
+        />
+      </div>
+      <Button onClick={onSubmit} className="w-full" disabled={loading || !formData.name}>
+        {loading ? 'Đang xử lý...' : submitLabel}
+      </Button>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
-      {/* Main Meters Section */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Home className="h-5 w-5 text-primary" />
-            Đồng hồ chính (Chủ nhà)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            {mainMeters.filter(m => m.type === 'electricity').map(meter => (
-              <div key={meter.id} className="p-3 bg-yellow-500/10 rounded-lg">
-                <div className="flex items-center gap-2 text-yellow-600">
-                  <Zap className="h-4 w-4" />
-                  <span className="font-medium text-sm">{meter.name}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Chỉ số: {getLastReading(meter.id)?.toLocaleString() || '---'} kWh
-                </p>
-              </div>
-            ))}
-            {mainMeters.filter(m => m.type === 'water').map(meter => (
-              <div key={meter.id} className="p-3 bg-blue-500/10 rounded-lg">
-                <div className="flex items-center gap-2 text-blue-600">
-                  <Droplets className="h-4 w-4" />
-                  <span className="font-medium text-sm">{meter.name}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Chỉ số: {getLastReading(meter.id)?.toLocaleString() || '---'} m³
-                </p>
-              </div>
-            ))}
-          </div>
-          {mainMeters.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              Chưa có đồng hồ chính. Thêm ở tab "Đồng hồ".
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Tenants Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -156,42 +204,11 @@ export function TenantManagement({
             <DialogHeader>
               <DialogTitle>Thêm người thuê mới</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Tên người thuê *</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="VD: Nguyễn Văn A"
-                />
-              </div>
-              <div>
-                <Label>Số điện thoại</Label>
-                <Input
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="VD: 0901234567"
-                />
-              </div>
-              <div>
-                <Label>Phòng / Tên gọi</Label>
-                <Input
-                  value={formData.room_name}
-                  onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
-                  placeholder="VD: Phòng 1, Tầng trệt..."
-                />
-              </div>
-              <div>
-                <Label>Tiền thuê hàng tháng (VND)</Label>
-                <Input
-                  type="number"
-                  value={formData.monthly_rent}
-                  onChange={(e) => setFormData({ ...formData, monthly_rent: e.target.value })}
-                  placeholder="VD: 3000000"
-                />
-              </div>
-              <Button onClick={handleAdd} className="w-full">Thêm người thuê</Button>
-            </div>
+            <TenantForm onSubmit={handleAdd} submitLabel="Thêm người thuê" />
+            <p className="text-xs text-muted-foreground text-center">
+              <AlertCircle className="h-3 w-3 inline mr-1" />
+              Hệ thống sẽ tự động tạo đồng hồ điện và nước cho người thuê
+            </p>
           </DialogContent>
         </Dialog>
       </div>
@@ -202,46 +219,35 @@ export function TenantManagement({
           <DialogHeader>
             <DialogTitle>Chỉnh sửa người thuê</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Tên người thuê *</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Số điện thoại</Label>
-              <Input
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Phòng / Tên gọi</Label>
-              <Input
-                value={formData.room_name}
-                onChange={(e) => setFormData({ ...formData, room_name: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Tiền thuê hàng tháng (VND)</Label>
-              <Input
-                type="number"
-                value={formData.monthly_rent}
-                onChange={(e) => setFormData({ ...formData, monthly_rent: e.target.value })}
-              />
-            </div>
-            <Button onClick={handleUpdate} className="w-full">Cập nhật</Button>
-          </div>
+          <TenantForm onSubmit={handleUpdate} submitLabel="Cập nhật" />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Xóa người thuê sẽ xóa luôn các đồng hồ và hóa đơn liên quan. Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Tenant Cards */}
       {tenants.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-muted-foreground">
-            Chưa có người thuê. Nhấn "Thêm" để bắt đầu.
+            <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>Chưa có người thuê. Nhấn "Thêm" để bắt đầu.</p>
+            <p className="text-xs mt-1">Đồng hồ điện/nước sẽ được tạo tự động.</p>
           </CardContent>
         </Card>
       ) : (
@@ -249,7 +255,7 @@ export function TenantManagement({
           {tenants.map(tenant => {
             const utils = getTenantUtilities(tenant.id);
             return (
-              <Card key={tenant.id}>
+              <Card key={tenant.id} className={!tenant.is_active ? 'opacity-60' : ''}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -280,9 +286,7 @@ export function TenantManagement({
                           {utils.electricityMeter ? (
                             <div className="mt-1">
                               <p className="text-muted-foreground">
-                                {utils.electricityBill 
-                                  ? `${utils.electricityBill.usage} kWh`
-                                  : 'Chưa ghi số'}
+                                Chỉ số: {utils.electricityReading?.toLocaleString() || '0'} kWh
                               </p>
                               {utils.electricityBill && (
                                 <p className="font-mono font-medium text-foreground">
@@ -291,7 +295,7 @@ export function TenantManagement({
                               )}
                             </div>
                           ) : (
-                            <p className="text-muted-foreground mt-1">Chưa gán ĐH</p>
+                            <p className="text-destructive mt-1">Chưa có ĐH</p>
                           )}
                         </div>
 
@@ -303,9 +307,7 @@ export function TenantManagement({
                           {utils.waterMeter ? (
                             <div className="mt-1">
                               <p className="text-muted-foreground">
-                                {utils.waterBill 
-                                  ? `${utils.waterBill.usage} m³`
-                                  : 'Chưa ghi số'}
+                                Chỉ số: {utils.waterReading?.toLocaleString() || '0'} m³
                               </p>
                               {utils.waterBill && (
                                 <p className="font-mono font-medium text-foreground">
@@ -314,7 +316,7 @@ export function TenantManagement({
                               )}
                             </div>
                           ) : (
-                            <p className="text-muted-foreground mt-1">Chưa gán ĐH</p>
+                            <p className="text-destructive mt-1">Chưa có ĐH</p>
                           )}
                         </div>
                       </div>
@@ -333,7 +335,7 @@ export function TenantManagement({
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(tenant)}>
                         <Edit2 className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDeleteTenant(tenant.id)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDeleteConfirm(tenant.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
