@@ -16,6 +16,9 @@ import Settings from "./pages/Settings";
 import AiNote from "./pages/AiNote";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Installments from "./pages/Installments";
+import Budgets from "./pages/Budgets";
+import RecurringTransactions from "./pages/RecurringTransactions";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,9 @@ const App = () => (
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/ai-note" element={<AiNote />} />
+                <Route path="/installments" element={<Installments />} />
+                <Route path="/budgets" element={<Budgets />} />
+                <Route path="/recurring" element={<RecurringTransactions />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

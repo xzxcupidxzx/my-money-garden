@@ -17,9 +17,12 @@ import {
   CreditCard,
   Plus,
   Shield,
-  Bell
+  Bell,
+  RefreshCw,
+  Target,
+  ChevronRight
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -110,6 +113,53 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Advanced Features */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Tính năng nâng cao</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          <Link to="/installments">
+            <Button variant="ghost" className="w-full justify-between">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-5 w-5 text-expense" />
+                <div className="text-left">
+                  <p className="font-medium">Quản lý Trả Góp</p>
+                  <p className="text-xs text-muted-foreground">Theo dõi các khoản nợ</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </Link>
+          
+          <Link to="/budgets">
+            <Button variant="ghost" className="w-full justify-between">
+              <div className="flex items-center gap-3">
+                <Target className="h-5 w-5 text-income" />
+                <div className="text-left">
+                  <p className="font-medium">Ngân sách</p>
+                  <p className="text-xs text-muted-foreground">Thiết lập giới hạn chi tiêu</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </Link>
+          
+          <Link to="/recurring">
+            <Button variant="ghost" className="w-full justify-between">
+              <div className="flex items-center gap-3">
+                <RefreshCw className="h-5 w-5 text-transfer" />
+                <div className="text-left">
+                  <p className="font-medium">Giao dịch Định kỳ</p>
+                  <p className="text-xs text-muted-foreground">Tự động hóa thu chi</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
