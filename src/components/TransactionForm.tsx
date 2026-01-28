@@ -105,45 +105,146 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      {/* Transaction Type Tabs - Compact */}
-      <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+    <div className="flex flex-col h-full space-y-2">
+      {/* Transaction Type Tabs - Ultra Compact */}
+      <div className="flex gap-0.5 p-0.5 bg-muted/50 rounded-md">
         <Button
           variant={type === 'expense' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-9",
+            "flex-1 h-7 text-xs",
             type === 'expense' && "bg-expense hover:bg-expense/90 text-expense-foreground"
           )}
           onClick={() => { setType('expense'); setCategoryId(''); }}
         >
-          <TrendingDown className="h-4 w-4 mr-1.5" />
+          <TrendingDown className="h-3 w-3 mr-1" />
           Chi
         </Button>
         <Button
           variant={type === 'income' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-9",
+            "flex-1 h-7 text-xs",
             type === 'income' && "bg-income hover:bg-income/90 text-income-foreground"
           )}
           onClick={() => { setType('income'); setCategoryId(''); }}
         >
-          <TrendingUp className="h-4 w-4 mr-1.5" />
+          <TrendingUp className="h-3 w-3 mr-1" />
           Thu
         </Button>
         <Button
           variant={type === 'transfer' ? 'default' : 'ghost'}
           size="sm"
           className={cn(
-            "flex-1 h-9",
+            "flex-1 h-7 text-xs",
             type === 'transfer' && "bg-transfer hover:bg-transfer/90 text-transfer-foreground"
           )}
           onClick={() => { setType('transfer'); setCategoryId(''); }}
         >
-          <ArrowLeftRight className="h-4 w-4 mr-1.5" />
+          <ArrowLeftRight className="h-3 w-3 mr-1" />
           Chuyển
         </Button>
+      </div>
+
+      {/* Form Fields - Ultra Compact Grid */}
+      <div className="grid grid-cols-2 gap-1.5">
+        {type !== 'transfer' ? (
+          <div>
+            <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Danh mục</Label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
+                <SelectValue placeholder="Chọn" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCategories.map((cat) => {
+                  const IconComponent = getCategoryIcon(cat.icon);
+                  return (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <div className="flex items-center gap-1.5">
+                        {IconComponent && <IconComponent className="h-3 w-3" style={{ color: cat.color || undefined }} />}
+                        <span className="text-xs">{cat.name}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div>
+            <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Từ TK</Label>
+            <Select value={accountId} onValueChange={setAccountId}>
+              <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
+                <SelectValue placeholder="Chọn" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map((acc) => (
+                  <SelectItem key={acc.id} value={acc.id}>
+                    <span className="text-xs">{acc.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div>
+          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">
+            {type === 'transfer' ? 'Đến TK' : 'Tài khoản'}
+          </Label>
+          <Select 
+            value={type === 'transfer' ? toAccountId : accountId} 
+            onValueChange={type === 'transfer' ? setToAccountId : setAccountId}
+          >
+            <SelectTrigger className="h-8 text-xs bg-card/60 border-border/50">
+              <SelectValue placeholder="Chọn" />
+            </SelectTrigger>
+            <SelectContent>
+              {(type === 'transfer' 
+                ? accounts.filter(a => a.id !== accountId)
+                : accounts
+              ).map((acc) => (
+                <SelectItem key={acc.id} value={acc.id}>
+                  <span className="text-xs">{acc.name}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Ngày</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="w-full h-8 justify-start bg-card/60 border-border/50 font-normal text-xs px-2"
+              >
+                <CalendarIcon className="mr-1.5 h-3 w-3 text-muted-foreground" />
+                <span className="font-mono text-xs">{format(date, 'dd/MM', { locale: vi })}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => d && setDate(d)}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div>
+          <Label className="text-[10px] font-medium text-muted-foreground mb-0.5 block">Mô tả</Label>
+          <Input
+            placeholder="Ghi chú..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="h-8 text-xs bg-card/60 border-border/50"
+          />
+        </div>
       </div>
 
       {/* Amount & Keypad Section */}
@@ -156,121 +257,14 @@ export function TransactionForm({ categories, accounts, onSubmit, loading }: Tra
         />
       </div>
 
-      {/* Form Fields - Compact Grid */}
-      <div className="space-y-3 pb-2">
-        {/* Row 1: Category & Account */}
-        <div className="grid grid-cols-2 gap-2">
-          {type !== 'transfer' ? (
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Danh mục</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger className="h-11 bg-card/60 border-border/50">
-                  <SelectValue placeholder="Chọn danh mục" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredCategories.map((cat) => {
-                    const IconComponent = getCategoryIcon(cat.icon);
-                    return (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        <div className="flex items-center gap-2">
-                          {IconComponent && <IconComponent className="h-4 w-4" style={{ color: cat.color || undefined }} />}
-                          <span>{cat.name}</span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground">Từ TK</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger className="h-11 bg-card/60 border-border/50">
-                  <SelectValue placeholder="Chọn tài khoản" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>
-                      {acc.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">
-              {type === 'transfer' ? 'Đến TK' : 'Tài khoản'}
-            </Label>
-            <Select 
-              value={type === 'transfer' ? toAccountId : accountId} 
-              onValueChange={type === 'transfer' ? setToAccountId : setAccountId}
-            >
-              <SelectTrigger className="h-11 bg-card/60 border-border/50">
-                <SelectValue placeholder="Chọn tài khoản" />
-              </SelectTrigger>
-              <SelectContent>
-                {(type === 'transfer' 
-                  ? accounts.filter(a => a.id !== accountId)
-                  : accounts
-                ).map((acc) => (
-                  <SelectItem key={acc.id} value={acc.id}>
-                    {acc.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Row 2: Date & Description */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Ngày</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full h-11 justify-start bg-card/60 border-border/50 font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span className="font-mono text-sm">{format(date, 'dd/MM/yyyy', { locale: vi })}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => d && setDate(d)}
-                  initialFocus
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Mô tả</Label>
-            <Input
-              placeholder="Ghi chú..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="h-11 bg-card/60 border-border/50"
-            />
-          </div>
-        </div>
-
-        {/* Smart Reset Toggle - Minimal */}
-        <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg">
-          <span className="text-xs text-muted-foreground">Giữ danh mục khi thêm liên tiếp</span>
-          <Switch 
-            checked={smartReset} 
-            onCheckedChange={setSmartReset}
-            className="scale-90"
-          />
-        </div>
+      {/* Smart Reset Toggle - Ultra Minimal */}
+      <div className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded-md">
+        <span className="text-[10px] text-muted-foreground">Giữ danh mục</span>
+        <Switch 
+          checked={smartReset} 
+          onCheckedChange={setSmartReset}
+          className="scale-75"
+        />
       </div>
     </div>
   );
