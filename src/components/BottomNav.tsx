@@ -5,7 +5,8 @@ import {
   PieChart, 
   Briefcase, 
   Settings,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Giao dịch' },
   { to: '/history', icon: History, label: 'Lịch sử' },
-  { to: '/statistics', icon: PieChart, label: 'Thống kê' },
+  { to: '/utilities', icon: Zap, label: 'Điện nước' },
   { to: '/management', icon: Briefcase, label: 'Quản lý' },
   { to: '/settings', icon: Settings, label: 'Cài đặt' },
 ];

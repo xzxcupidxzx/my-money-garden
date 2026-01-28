@@ -517,6 +517,108 @@ export type Database = {
           },
         ]
       }
+      utility_bills: {
+        Row: {
+          base_amount: number
+          created_at: string | null
+          current_reading: number
+          id: string
+          meter_id: string
+          notes: string | null
+          period_end: string
+          period_start: string
+          previous_reading: number
+          total_amount: number
+          transaction_id: string | null
+          updated_at: string | null
+          usage: number
+          user_id: string
+          vat_amount: number | null
+        }
+        Insert: {
+          base_amount: number
+          created_at?: string | null
+          current_reading: number
+          id?: string
+          meter_id: string
+          notes?: string | null
+          period_end: string
+          period_start: string
+          previous_reading: number
+          total_amount: number
+          transaction_id?: string | null
+          updated_at?: string | null
+          usage: number
+          user_id: string
+          vat_amount?: number | null
+        }
+        Update: {
+          base_amount?: number
+          created_at?: string | null
+          current_reading?: number
+          id?: string
+          meter_id?: string
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          previous_reading?: number
+          total_amount?: number
+          transaction_id?: string | null
+          updated_at?: string | null
+          usage?: number
+          user_id?: string
+          vat_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "utility_bills_meter_id_fkey"
+            columns: ["meter_id"]
+            isOneToOne: false
+            referencedRelation: "utility_meters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "utility_bills_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      utility_meters: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_main: boolean | null
+          name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_main?: boolean | null
+          name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_main?: boolean | null
+          name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
