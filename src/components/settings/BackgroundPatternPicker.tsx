@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useBackgroundPattern, PATTERN_OPTIONS, type BackgroundPattern } from '@/hooks/useBackgroundPattern';
 import { cn } from '@/lib/utils';
-import { Grid3X3, Circle, Square, LayoutGrid, Minus } from 'lucide-react';
+import { Grid3X3, Circle, Square, LayoutGrid, Minus, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const PatternIcon = ({ pattern }: { pattern: BackgroundPattern }) => {
   switch (pattern) {
@@ -47,6 +49,13 @@ const PatternPreview = ({ pattern }: { pattern: BackgroundPattern }) => {
 
 export function BackgroundPatternPicker() {
   const { pattern, setPattern } = useBackgroundPattern();
+  const [selectedPattern, setSelectedPattern] = useState<BackgroundPattern>(pattern);
+  
+  const hasChanges = selectedPattern !== pattern;
+
+  const handleApply = () => {
+    setPattern(selectedPattern);
+  };
 
   return (
     <div className="space-y-3">
@@ -62,17 +71,17 @@ export function BackgroundPatternPicker() {
         {PATTERN_OPTIONS.map((option) => (
           <button
             key={option.value}
-            onClick={() => setPattern(option.value)}
+            onClick={() => setSelectedPattern(option.value)}
             className={cn(
               "flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-all",
-              pattern === option.value
+              selectedPattern === option.value
                 ? "border-primary bg-primary/5"
                 : "border-transparent bg-muted/50 hover:bg-muted"
             )}
           >
             <div className={cn(
               "w-10 h-10 rounded-md flex items-center justify-center",
-              pattern === option.value ? "bg-primary text-primary-foreground" : "bg-background"
+              selectedPattern === option.value ? "bg-primary text-primary-foreground" : "bg-background"
             )}>
               <PatternIcon pattern={option.value} />
             </div>
@@ -86,8 +95,16 @@ export function BackgroundPatternPicker() {
       {/* Preview */}
       <div className="space-y-1.5">
         <p className="text-xs text-muted-foreground">Xem trước:</p>
-        <PatternPreview pattern={pattern} />
+        <PatternPreview pattern={selectedPattern} />
       </div>
+
+      {/* Apply Button */}
+      {hasChanges && (
+        <Button onClick={handleApply} className="w-full" size="sm">
+          <Check className="h-4 w-4 mr-2" />
+          Áp dụng
+        </Button>
+      )}
     </div>
   );
 }
