@@ -7,7 +7,7 @@ import { useAccounts } from '@/hooks/useAccounts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Calculator, FileText, Zap, Home } from 'lucide-react';
+import { Users, Calculator, FileText, Zap } from 'lucide-react';
 import { TenantManagement } from '@/components/utilities/TenantManagement';
 import { MainMeterManagement } from '@/components/utilities/MainMeterManagement';
 import { PriceSettings } from '@/components/utilities/PriceSettings';
@@ -92,15 +92,11 @@ export default function UtilitiesPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="tenants">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
-          <TabsTrigger value="tenants" className="flex flex-col items-center gap-1 py-2 text-xs">
+      <Tabs defaultValue="management">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsTrigger value="management" className="flex flex-col items-center gap-1 py-2 text-xs">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Người thuê</span>
-          </TabsTrigger>
-          <TabsTrigger value="main-meters" className="flex flex-col items-center gap-1 py-2 text-xs">
-            <Home className="h-4 w-4" />
-            <span className="hidden sm:inline">ĐH Chính</span>
+            <span className="hidden sm:inline">Quản lý</span>
           </TabsTrigger>
           <TabsTrigger value="calculate" className="flex flex-col items-center gap-1 py-2 text-xs">
             <Calculator className="h-4 w-4" />
@@ -116,8 +112,8 @@ export default function UtilitiesPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Tenants Tab */}
-        <TabsContent value="tenants">
+        {/* Management Tab - Combined Tenants & Main Meters */}
+        <TabsContent value="management" className="space-y-6">
           <TenantManagement
             tenants={tenants}
             meters={meters}
@@ -128,10 +124,6 @@ export default function UtilitiesPage() {
             onAddMeter={addMeter}
             getLastReading={getLastReading}
           />
-        </TabsContent>
-
-        {/* Main Meters Tab */}
-        <TabsContent value="main-meters">
           <MainMeterManagement
             meters={meters}
             getLastReading={getLastReading}
