@@ -175,13 +175,13 @@ export default function TransactionsPage() {
             <Plus className="h-6 w-6" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[92vh] rounded-t-3xl p-0 bg-background/95 backdrop-blur-md">
-          <div className="sticky top-0 z-10 px-4 py-3 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <SheetContent side="bottom" className="h-auto max-h-[85vh] rounded-t-2xl p-0 bg-background/98 backdrop-blur-md">
+          <div className="px-3 py-2 border-b border-border/50 bg-background/80">
             <SheetHeader>
-              <SheetTitle className="text-lg">Thêm giao dịch mới</SheetTitle>
+              <SheetTitle className="text-sm">Thêm giao dịch</SheetTitle>
             </SheetHeader>
           </div>
-          <div className="px-4 py-4 overflow-y-auto h-[calc(92vh-60px)]">
+          <div className="px-3 py-2">
             <TransactionForm
               categories={categories}
               accounts={accounts}

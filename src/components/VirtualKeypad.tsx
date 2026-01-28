@@ -48,47 +48,47 @@ export function VirtualKeypad({ value, onChange, onSubmit, maxLength = 15, disab
   ];
 
   return (
-    <div className="space-y-3">
-      {/* Amount Display */}
-      <div className="bg-card/80 backdrop-blur-sm rounded-xl p-4 border border-border/50">
-        <p className="text-center text-2xl font-mono tabular-nums text-foreground min-h-[2rem]">
+    <div className="space-y-2">
+      {/* Amount Display - Compact */}
+      <div className="bg-card/80 backdrop-blur-sm rounded-lg p-2 border border-border/50">
+        <p className="text-center text-xl font-mono tabular-nums text-foreground min-h-[1.5rem]">
           {value || '0'}
         </p>
       </div>
 
-      {/* Virtual keypad */}
-      <div className="bg-card/60 backdrop-blur-sm rounded-xl p-3 border border-border/30">
-        <div className="grid grid-cols-3 gap-2">
-          {keys.map((row) => (
+      {/* Virtual keypad - Compact */}
+      <div className="bg-card/60 backdrop-blur-sm rounded-lg p-2 border border-border/30">
+        <div className="grid grid-cols-4 gap-1">
+          {keys.map((row, rowIdx) => (
             row.map((key) => (
               <Button
                 key={key}
                 variant="ghost"
                 type="button"
                 className={cn(
-                  "h-14 text-xl font-semibold rounded-xl transition-all active:scale-95",
+                  "h-10 text-base font-semibold rounded-lg transition-all active:scale-95",
                   "bg-transparent hover:bg-muted/50 active:bg-muted",
                   key === 'backspace' && "text-muted-foreground"
                 )}
                 onClick={() => handlePress(key)}
               >
-                {key === 'backspace' ? <Delete className="h-5 w-5" /> : key}
+                {key === 'backspace' ? <Delete className="h-4 w-4" /> : key}
               </Button>
             ))
           ))}
+          {/* Submit button in the 4th column */}
+          {onSubmit && (
+            <Button
+              className="h-10 bg-income hover:bg-income/90 text-income-foreground font-semibold rounded-lg transition-all active:scale-[0.98] row-span-4"
+              style={{ gridRow: '1 / 5', gridColumn: '4' }}
+              type="button"
+              onClick={onSubmit}
+              disabled={disabled || !value || value === '0'}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-        
-        {onSubmit && (
-          <Button
-            className="w-full h-12 mt-3 bg-income hover:bg-income/90 text-income-foreground font-semibold rounded-xl transition-all active:scale-[0.98]"
-            type="button"
-            onClick={onSubmit}
-            disabled={disabled || !value || value === '0'}
-          >
-            <Check className="h-5 w-5 mr-2" />
-            Xác nhận
-          </Button>
-        )}
       </div>
     </div>
   );
