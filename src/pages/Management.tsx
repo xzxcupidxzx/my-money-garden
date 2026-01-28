@@ -168,7 +168,7 @@ export default function ManagementPage() {
             </div>
           )}
 
-          <Link to="/installments">
+          <Link to="/installments" className="block mt-4">
             <Button variant="outline" className="w-full">
               Xem tất cả & Quản lý
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -278,7 +278,7 @@ export default function ManagementPage() {
             </div>
           )}
 
-          <Link to="/budgets">
+          <Link to="/budgets" className="block mt-4">
             <Button variant="outline" className="w-full">
               Xem tất cả & Quản lý
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -369,7 +369,7 @@ export default function ManagementPage() {
             </div>
           )}
 
-          <Link to="/recurring">
+          <Link to="/recurring" className="block mt-4">
             <Button variant="outline" className="w-full">
               Xem tất cả & Quản lý
               <ChevronRight className="h-4 w-4 ml-1" />
