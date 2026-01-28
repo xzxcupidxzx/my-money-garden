@@ -9,19 +9,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary Action - Industrial solid
-        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:scale-[0.98] rounded-sm",
+        // Primary Action - Industrial solid, no rounded corners
+        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md active:bg-primary/80 active:scale-[0.98]",
         // Destructive/Error
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80 rounded-sm",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md active:bg-destructive/80",
         // Secondary Action - outline with sharp corners
-        outline: "border-2 border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/50 active:bg-accent/80 rounded-sm",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 rounded-sm",
+        outline: "border-2 border-input bg-background hover:bg-accent hover:text-accent-foreground hover:border-primary/50 active:bg-accent/80",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
         // Ghost - subtle
-        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-sm",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
         // Text Link
         link: "text-primary underline-offset-4 hover:underline active:text-primary/80",
-        // NEW: Technical - bordered with corner accents
-        technical: "relative border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary active:bg-primary/20 rounded-none before:absolute before:top-0 before:left-0 before:w-2 before:h-2 before:border-t before:border-l before:border-primary after:absolute after:bottom-0 after:right-0 after:w-2 after:h-2 after:border-b after:border-r after:border-primary",
+        // Technical - bordered with corner accents
+        technical: "relative border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary active:bg-primary/20 before:absolute before:top-0 before:left-0 before:w-3 before:h-3 before:border-t-2 before:border-l-2 before:border-primary after:absolute after:bottom-0 after:right-0 after:w-3 after:h-3 after:border-b-2 after:border-r-2 after:border-primary",
       },
       size: {
         default: "h-10 px-4 py-2",

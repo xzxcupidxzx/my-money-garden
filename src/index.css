@@ -405,53 +405,122 @@
     @apply border-primary/50 bg-primary/5;
   }
 
-  /* ====== INDUSTRIAL CARD STYLES ====== */
+  /* ====== INDUSTRIAL CARD STYLES - CHAMFER DESIGN ====== */
   
-  /* Technical/Blueprint card style - enhanced */
+  /* Chamfer size variables */
+  :root {
+    --chamfer-size: 8px;
+    --chamfer-size-sm: 6px;
+    --chamfer-size-lg: 12px;
+    --corner-thickness: 3px;
+  }
+
+  /* Base chamfer clip-path */
+  .chamfer {
+    clip-path: polygon(
+      var(--chamfer-size) 0,
+      calc(100% - var(--chamfer-size)) 0,
+      100% var(--chamfer-size),
+      100% calc(100% - var(--chamfer-size)),
+      calc(100% - var(--chamfer-size)) 100%,
+      var(--chamfer-size) 100%,
+      0 calc(100% - var(--chamfer-size)),
+      0 var(--chamfer-size)
+    );
+  }
+
+  .chamfer-sm {
+    clip-path: polygon(
+      var(--chamfer-size-sm) 0,
+      calc(100% - var(--chamfer-size-sm)) 0,
+      100% var(--chamfer-size-sm),
+      100% calc(100% - var(--chamfer-size-sm)),
+      calc(100% - var(--chamfer-size-sm)) 100%,
+      var(--chamfer-size-sm) 100%,
+      0 calc(100% - var(--chamfer-size-sm)),
+      0 var(--chamfer-size-sm)
+    );
+  }
+
+  .chamfer-lg {
+    clip-path: polygon(
+      var(--chamfer-size-lg) 0,
+      calc(100% - var(--chamfer-size-lg)) 0,
+      100% var(--chamfer-size-lg),
+      100% calc(100% - var(--chamfer-size-lg)),
+      calc(100% - var(--chamfer-size-lg)) 100%,
+      var(--chamfer-size-lg) 100%,
+      0 calc(100% - var(--chamfer-size-lg)),
+      0 var(--chamfer-size-lg)
+    );
+  }
+
+  /* Technical/Blueprint card style - thick corner markers */
   .card-technical {
     @apply relative;
   }
   .card-technical::before {
     content: '';
-    @apply absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/40;
+    @apply absolute top-0 left-0 w-5 h-5;
+    border-top: var(--corner-thickness) solid hsl(var(--primary) / 0.6);
+    border-left: var(--corner-thickness) solid hsl(var(--primary) / 0.6);
   }
   .card-technical::after {
     content: '';
-    @apply absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary/40;
+    @apply absolute bottom-0 right-0 w-5 h-5;
+    border-bottom: var(--corner-thickness) solid hsl(var(--primary) / 0.6);
+    border-right: var(--corner-thickness) solid hsl(var(--primary) / 0.6);
   }
 
-  /* HUD Frame - PROPHET-73 style */
+  /* HUD Frame - 2 corner markers only (top-left, bottom-right) */
   .card-hud {
-    @apply relative border;
+    @apply relative;
   }
   .card-hud::before {
     content: '';
-    @apply absolute -top-px -left-px w-3 h-3;
-    background: linear-gradient(135deg, hsl(var(--foreground) / 0.3) 50%, transparent 50%);
+    @apply absolute top-0 left-0 w-6 h-6;
+    border-top: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-left: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
   }
   .card-hud::after {
     content: '';
-    @apply absolute -bottom-px -right-px w-3 h-3;
-    background: linear-gradient(-45deg, hsl(var(--foreground) / 0.3) 50%, transparent 50%);
+    @apply absolute bottom-0 right-0 w-6 h-6;
+    border-bottom: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-right: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
   }
 
-  /* Connection node corners */
-  .card-nodes {
+  /* Frame with 4 corner markers */
+  .frame-corners {
     @apply relative;
   }
-  .card-nodes::before,
-  .card-nodes::after {
+  .frame-corners::before {
     content: '';
-    @apply absolute w-2 h-2 rounded-full bg-primary/60;
+    @apply absolute top-0 left-0 w-5 h-5 pointer-events-none;
+    border-top: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-left: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
   }
-  .card-nodes::before {
-    @apply top-0 right-0 -translate-y-1/2 translate-x-1/2;
-  }
-  .card-nodes::after {
-    @apply bottom-0 left-0 translate-y-1/2 -translate-x-1/2;
+  .frame-corners::after {
+    content: '';
+    @apply absolute top-0 right-0 w-5 h-5 pointer-events-none;
+    border-top: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-right: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
   }
 
-  /* Glass card effect */
+  /* Additional corners using extra wrapper */
+  .frame-corners-bottom::before {
+    content: '';
+    @apply absolute bottom-0 left-0 w-5 h-5 pointer-events-none;
+    border-bottom: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-left: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+  }
+  .frame-corners-bottom::after {
+    content: '';
+    @apply absolute bottom-0 right-0 w-5 h-5 pointer-events-none;
+    border-bottom: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+    border-right: var(--corner-thickness) solid hsl(var(--primary) / 0.5);
+  }
+
+  /* Glass card effect with chamfer */
   .card-glass {
     @apply bg-card/80 backdrop-blur-md border-white/20;
   }

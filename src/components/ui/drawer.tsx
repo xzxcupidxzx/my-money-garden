@@ -35,21 +35,21 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-sm border border-border/50 bg-background",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col border border-border/50 bg-background",
         "relative",
         className,
       )}
       {...props}
     >
-      {/* HUD Corner markers */}
-      <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/50" />
-      <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary/50" />
+      {/* HUD Corner markers - thick 3px */}
+      <div className="absolute top-0 left-0 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--primary) / 0.5)', borderLeft: '3px solid hsl(var(--primary) / 0.5)' }} />
+      <div className="absolute top-0 right-0 w-6 h-6 pointer-events-none" style={{ borderTop: '3px solid hsl(var(--primary) / 0.5)', borderRight: '3px solid hsl(var(--primary) / 0.5)' }} />
       
       {/* Industrial handle */}
       <div className="mx-auto mt-3 flex items-center gap-1">
-        <div className="h-1 w-1 rounded-full bg-muted-foreground/50" />
-        <div className="h-1 w-16 rounded-sm bg-muted-foreground/30" />
-        <div className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+        <div className="h-1 w-1 bg-muted-foreground/50" />
+        <div className="h-1 w-16 bg-muted-foreground/30" />
+        <div className="h-1 w-1 bg-muted-foreground/50" />
       </div>
       {children}
     </DrawerPrimitive.Content>
@@ -98,7 +98,7 @@ const DrawerSectorLabel = ({ code, className }: { code: string; className?: stri
       {code}
     </span>
     <div className="flex-1 h-px bg-border" />
-    <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+    <div className="w-1.5 h-1.5 bg-primary/60" />
   </div>
 );
 DrawerSectorLabel.displayName = "DrawerSectorLabel";

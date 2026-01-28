@@ -17,7 +17,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-sm border border-input bg-background px-3 py-2 font-mono text-sm",
+      "flex h-10 w-full items-center justify-between border border-input bg-background px-3 py-2 font-mono text-sm",
       "ring-offset-background placeholder:text-muted-foreground",
       "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
       "hover:border-primary/50",
@@ -71,7 +71,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-sm border border-border/50 bg-popover text-popover-foreground shadow-lg",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden border border-border/50 bg-popover text-popover-foreground shadow-lg",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
@@ -80,6 +80,10 @@ const SelectContent = React.forwardRef<
       position={position}
       {...props}
     >
+      {/* HUD Corner markers */}
+      <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none z-10" style={{ borderTop: '2px solid hsl(var(--primary) / 0.4)', borderLeft: '2px solid hsl(var(--primary) / 0.4)' }} />
+      <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none z-10" style={{ borderBottom: '2px solid hsl(var(--primary) / 0.4)', borderRight: '2px solid hsl(var(--primary) / 0.4)' }} />
+      
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
@@ -115,7 +119,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-2 pl-8 pr-2 font-mono text-sm outline-none",
+      "relative flex w-full cursor-default select-none items-center py-2 pl-8 pr-2 font-mono text-sm outline-none",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       "focus:bg-accent focus:text-accent-foreground",
       "hover:bg-muted/50",
