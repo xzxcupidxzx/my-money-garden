@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Droplets, Plus, Trash2, Settings2 } from 'lucide-react';
+import { Zap, Droplets, Plus, Trash2, Edit2, Settings2 } from 'lucide-react';
 import { Tenant, UtilityMeter } from '@/hooks/useUtilities';
 
 interface MeterManagementProps {
@@ -28,7 +28,14 @@ export function MeterManagement({
   onDeleteMeter,
 }: MeterManagementProps) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingMeter, setEditingMeter] = useState<UtilityMeter | null>(null);
   const [newMeter, setNewMeter] = useState({
+    name: '',
+    type: 'electricity' as 'electricity' | 'water',
+    is_main: true,
+    tenant_id: '__none__',
+  });
+  const [editForm, setEditForm] = useState({
     name: '',
     type: 'electricity' as 'electricity' | 'water',
     is_main: true,
@@ -45,6 +52,27 @@ export function MeterManagement({
     });
     setNewMeter({ name: '', type: 'electricity', is_main: true, tenant_id: '__none__' });
     setShowAdd(false);
+  };
+
+  const startEdit = (meter: UtilityMeter) => {
+    setEditingMeter(meter);
+    setEditForm({
+      name: meter.name,
+      type: meter.type as 'electricity' | 'water',
+      is_main: meter.is_main,
+      tenant_id: meter.tenant_id || '__none__',
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingMeter || !editForm.name) return;
+    await onUpdateMeter(editingMeter.id, {
+      name: editForm.name,
+      type: editForm.type,
+      is_main: editForm.is_main,
+      tenant_id: editForm.tenant_id === '__none__' ? null : editForm.tenant_id,
+    });
+    setEditingMeter(null);
   };
 
   const mainElectricityMeters = meters.filter(m => m.type === 'electricity' && m.is_main);
@@ -72,9 +100,14 @@ export function MeterManagement({
           Chỉ số gần nhất: {getLastReading(meter.id)?.toLocaleString() || '---'} {unit}
         </p>
       </div>
-      <Button variant="ghost" size="icon" onClick={() => onDeleteMeter(meter.id)}>
-        <Trash2 className="h-4 w-4 text-destructive" />
-      </Button>
+      <div className="flex gap-1">
+        <Button variant="ghost" size="icon" onClick={() => startEdit(meter)}>
+          <Edit2 className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => onDeleteMeter(meter.id)}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
     </div>
   );
 
@@ -160,6 +193,77 @@ export function MeterManagement({
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editingMeter} onOpenChange={(open) => !open && setEditingMeter(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa đồng hồ</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Tên đồng hồ</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="VD: Điện chính, Nước phụ 1..."
+              />
+            </div>
+            <div>
+              <Label>Loại</Label>
+              <Select
+                value={editForm.type}
+                onValueChange={(v) => setEditForm({ ...editForm, type: v as 'electricity' | 'water' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="electricity">
+                    <div className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-yellow-500" /> Điện
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="water">
+                    <div className="flex items-center gap-2">
+                      <Droplets className="h-4 w-4 text-blue-500" /> Nước
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Đồng hồ chính (Chủ nhà)</Label>
+              <Switch
+                checked={editForm.is_main}
+                onCheckedChange={(v) => setEditForm({ ...editForm, is_main: v, tenant_id: v ? '__none__' : editForm.tenant_id })}
+              />
+            </div>
+            {!editForm.is_main && (
+              <div>
+                <Label>Gán cho người thuê</Label>
+                <Select
+                  value={editForm.tenant_id}
+                  onValueChange={(v) => setEditForm({ ...editForm, tenant_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn người thuê" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Không gán</SelectItem>
+                    {tenants.map(tenant => (
+                      <SelectItem key={tenant.id} value={tenant.id}>
+                        {tenant.name} {tenant.room_name && `(${tenant.room_name})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <Button onClick={handleUpdate} className="w-full">Cập nhật</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Electricity */}
       <Card>
