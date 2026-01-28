@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
 import { usePrivacy } from '@/hooks/usePrivacy';
 import { ThemeColorPicker } from '@/components/settings/ThemeColorPicker';
+import { BackgroundPatternPicker } from '@/components/settings/BackgroundPatternPicker';
 import { 
   User, 
   Moon, 
@@ -149,6 +150,9 @@ export default function SettingsPage() {
 
           {/* Theme Color Picker */}
           <ThemeColorPicker />
+
+          {/* Background Pattern Picker */}
+          <BackgroundPatternPicker />
 
           {/* Privacy Toggle */}
           <div className="flex items-center justify-between">

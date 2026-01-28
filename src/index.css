@@ -244,25 +244,63 @@
     padding-top: env(safe-area-inset-top);
   }
 
-  /* Grid pattern background - architectural blueprint style with plus markers */
-  .bg-grid-blueprint {
-    --grid-color: hsl(var(--foreground) / 0.12);
-    --grid-size: 100px;
-    --dash-length: 8px;
-    --dash-gap: 6px;
-    --plus-size: 10px;
+  /* Pattern: Dots - small dots pattern */
+  .bg-pattern-dots {
+    --dot-size: 1.5px;
+    --dot-spacing: 16px;
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(circle, hsl(var(--foreground) / 0.25) var(--dot-size), transparent var(--dot-size));
+    background-size: var(--dot-spacing) var(--dot-spacing);
+    background-position: 0 0;
+  }
+
+  .dark .bg-pattern-dots {
+    background-image: radial-gradient(circle, hsl(var(--foreground) / 0.15) var(--dot-size), transparent var(--dot-size));
+  }
+
+  /* Pattern: Grid - simple line grid */
+  .bg-pattern-grid {
+    --grid-size: 32px;
     background-color: hsl(var(--background));
     background-image: 
-      /* Plus markers at intersections */
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cline x1='0' y1='0' x2='100' y2='0' stroke='%23888' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.15'/%3E%3Cline x1='0' y1='0' x2='0' y2='100' stroke='%23888' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.15'/%3E%3Cline x1='-5' y1='0' x2='5' y2='0' stroke='%23333' stroke-width='1.5' stroke-opacity='0.4'/%3E%3Cline x1='0' y1='-5' x2='0' y2='5' stroke='%23333' stroke-width='1.5' stroke-opacity='0.4'/%3E%3C/svg%3E");
+      linear-gradient(to right, hsl(var(--foreground) / 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.08) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+  }
+
+  .dark .bg-pattern-grid {
+    background-image: 
+      linear-gradient(to right, hsl(var(--foreground) / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.05) 1px, transparent 1px);
+  }
+
+  /* Pattern: Blueprint - architectural style with plus markers (smaller grid) */
+  .bg-grid-blueprint {
+    --grid-size: 32px;
+    background-color: hsl(var(--background));
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cline x1='0' y1='0' x2='32' y2='0' stroke='%23888' stroke-width='0.5' stroke-dasharray='3 2' stroke-opacity='0.2'/%3E%3Cline x1='0' y1='0' x2='0' y2='32' stroke='%23888' stroke-width='0.5' stroke-dasharray='3 2' stroke-opacity='0.2'/%3E%3Cline x1='-3' y1='0' x2='3' y2='0' stroke='%23555' stroke-width='1' stroke-opacity='0.35'/%3E%3Cline x1='0' y1='-3' x2='0' y2='3' stroke='%23555' stroke-width='1' stroke-opacity='0.35'/%3E%3C/svg%3E");
     background-size: var(--grid-size) var(--grid-size);
     background-position: 0 0;
   }
 
   .dark .bg-grid-blueprint {
-    --grid-color: hsl(var(--foreground) / 0.08);
     background-image: 
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cline x1='0' y1='0' x2='100' y2='0' stroke='%23fff' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.08'/%3E%3Cline x1='0' y1='0' x2='0' y2='100' stroke='%23fff' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.08'/%3E%3Cline x1='-5' y1='0' x2='5' y2='0' stroke='%23fff' stroke-width='1.5' stroke-opacity='0.2'/%3E%3Cline x1='0' y1='-5' x2='0' y2='5' stroke='%23fff' stroke-width='1.5' stroke-opacity='0.2'/%3E%3C/svg%3E");
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cline x1='0' y1='0' x2='32' y2='0' stroke='%23fff' stroke-width='0.5' stroke-dasharray='3 2' stroke-opacity='0.1'/%3E%3Cline x1='0' y1='0' x2='0' y2='32' stroke='%23fff' stroke-width='0.5' stroke-dasharray='3 2' stroke-opacity='0.1'/%3E%3Cline x1='-3' y1='0' x2='3' y2='0' stroke='%23fff' stroke-width='1' stroke-opacity='0.2'/%3E%3Cline x1='0' y1='-3' x2='0' y2='3' stroke='%23fff' stroke-width='1' stroke-opacity='0.2'/%3E%3C/svg%3E");
+  }
+
+  /* Pattern: Squares - diagonal stripes in squares */
+  .bg-pattern-squares {
+    --square-size: 48px;
+    background-color: hsl(var(--background));
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='0' y='0' width='24' height='24' fill='none' stroke='%23888' stroke-width='0.5' stroke-opacity='0.15'/%3E%3Cpattern id='diag' width='4' height='4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'%3E%3Cline x1='0' y1='0' x2='0' y2='4' stroke='%23888' stroke-width='1' stroke-opacity='0.08'/%3E%3C/pattern%3E%3Crect x='24' y='0' width='24' height='24' fill='url(%23diag)'/%3E%3Crect x='0' y='24' width='24' height='24' fill='url(%23diag)'/%3E%3C/svg%3E");
+    background-size: var(--square-size) var(--square-size);
+  }
+
+  .dark .bg-pattern-squares {
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect x='0' y='0' width='24' height='24' fill='none' stroke='%23fff' stroke-width='0.5' stroke-opacity='0.08'/%3E%3Cpattern id='diag' width='4' height='4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'%3E%3Cline x1='0' y1='0' x2='0' y2='4' stroke='%23fff' stroke-width='1' stroke-opacity='0.05'/%3E%3C/pattern%3E%3Crect x='24' y='0' width='24' height='24' fill='url(%23diag)'/%3E%3Crect x='0' y='24' width='24' height='24' fill='url(%23diag)'/%3E%3C/svg%3E");
   }
 
   /* Grid pattern background - technical/architectural feel */
