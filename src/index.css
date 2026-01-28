@@ -244,6 +244,27 @@
     padding-top: env(safe-area-inset-top);
   }
 
+  /* Grid pattern background - architectural blueprint style with plus markers */
+  .bg-grid-blueprint {
+    --grid-color: hsl(var(--foreground) / 0.12);
+    --grid-size: 100px;
+    --dash-length: 8px;
+    --dash-gap: 6px;
+    --plus-size: 10px;
+    background-color: hsl(var(--background));
+    background-image: 
+      /* Plus markers at intersections */
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cline x1='0' y1='0' x2='100' y2='0' stroke='%23888' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.15'/%3E%3Cline x1='0' y1='0' x2='0' y2='100' stroke='%23888' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.15'/%3E%3Cline x1='-5' y1='0' x2='5' y2='0' stroke='%23333' stroke-width='1.5' stroke-opacity='0.4'/%3E%3Cline x1='0' y1='-5' x2='0' y2='5' stroke='%23333' stroke-width='1.5' stroke-opacity='0.4'/%3E%3C/svg%3E");
+    background-size: var(--grid-size) var(--grid-size);
+    background-position: 0 0;
+  }
+
+  .dark .bg-grid-blueprint {
+    --grid-color: hsl(var(--foreground) / 0.08);
+    background-image: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cline x1='0' y1='0' x2='100' y2='0' stroke='%23fff' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.08'/%3E%3Cline x1='0' y1='0' x2='0' y2='100' stroke='%23fff' stroke-width='1' stroke-dasharray='8 6' stroke-opacity='0.08'/%3E%3Cline x1='-5' y1='0' x2='5' y2='0' stroke='%23fff' stroke-width='1.5' stroke-opacity='0.2'/%3E%3Cline x1='0' y1='-5' x2='0' y2='5' stroke='%23fff' stroke-width='1.5' stroke-opacity='0.2'/%3E%3C/svg%3E");
+  }
+
   /* Grid pattern background - technical/architectural feel */
   .bg-grid {
     background-image: 
