@@ -222,4 +222,58 @@
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
+
+  /* Grid pattern background - technical/architectural feel */
+  .bg-grid {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .bg-grid-subtle {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border) / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.15) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /* Elevation classes - 4 clear levels */
+  .elevation-0 {
+    box-shadow: none;
+  }
+  .elevation-1 {
+    box-shadow: var(--shadow-xs);
+  }
+  .elevation-2 {
+    box-shadow: var(--shadow-md);
+  }
+  .elevation-3 {
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* Standardized spacing utilities */
+  .space-1 { margin: 4px; }
+  .space-2 { margin: 8px; }
+  .space-3 { margin: 16px; }
+  .space-4 { margin: 24px; }
+  .space-5 { margin: 32px; }
+  .space-6 { margin: 48px; }
+
+  .gap-space-1 { gap: 4px; }
+  .gap-space-2 { gap: 8px; }
+  .gap-space-3 { gap: 16px; }
+  .gap-space-4 { gap: 24px; }
+  .gap-space-5 { gap: 32px; }
+  .gap-space-6 { gap: 48px; }
+
+  /* Focus ring styling */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Filled input state */
+  .input-filled {
+    @apply border-primary/50 bg-primary/5;
+  }
 }
