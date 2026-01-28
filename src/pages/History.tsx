@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +7,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useReconciliation } from '@/hooks/useReconciliation';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Scale, History, TrendingUp, TrendingDown, Wallet, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
 import { format, addMonths, subMonths, getDaysInMonth, startOfMonth, getDay, parseISO, isSameDay } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ReconciliationCards } from '@/components/ReconciliationCards';
 import { AVAILABLE_ICONS } from '@/components/categories/IconPicker';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+type AccountSortType = 'name' | 'balance-high' | 'balance-low';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -23,11 +31,33 @@ export default function HistoryPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [showAccounts, setShowAccounts] = useState(true);
+  const [accountSort, setAccountSort] = useState<AccountSortType>('name');
   const { transactions, summary, loading } = useTransactions(selectedDate);
   const { accounts, refetch: refetchAccounts, totalBalance } = useAccounts();
   const { reconciliations, loading: reconciliationLoading, refetch: refetchReconciliations } = useReconciliation();
   
   const activeAccounts = accounts.filter(a => a.is_active);
+  
+  // Sorted accounts
+  const sortedAccounts = useMemo(() => {
+    const sorted = [...activeAccounts];
+    switch (accountSort) {
+      case 'name':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'balance-high':
+        return sorted.sort((a, b) => Number(b.balance) - Number(a.balance));
+      case 'balance-low':
+        return sorted.sort((a, b) => Number(a.balance) - Number(b.balance));
+      default:
+        return sorted;
+    }
+  }, [activeAccounts, accountSort]);
+  
+  const sortLabels: Record<AccountSortType, string> = {
+    'name': 'Tên A-Z',
+    'balance-high': 'Số dư cao → thấp',
+    'balance-low': 'Số dư thấp → cao',
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -110,13 +140,36 @@ export default function HistoryPage() {
           </CardHeader>
           <CollapsibleContent>
             <CardContent className="pt-0">
-              {activeAccounts.length === 0 ? (
+              {/* Sort dropdown */}
+              <div className="flex justify-end mb-3">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-2">
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                      <span className="text-xs">{sortLabels[accountSort]}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setAccountSort('name')}>
+                      Tên A-Z
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setAccountSort('balance-high')}>
+                      Số dư cao → thấp
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setAccountSort('balance-low')}>
+                      Số dư thấp → cao
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              {sortedAccounts.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-4">
                   Chưa có tài khoản nào
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {activeAccounts.map((account) => {
+                  {sortedAccounts.map((account) => {
                     const IconComponent = account.icon && AVAILABLE_ICONS[account.icon] 
                       ? AVAILABLE_ICONS[account.icon] 
                       : Wallet;
