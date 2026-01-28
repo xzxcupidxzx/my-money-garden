@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { FileText, Printer, CheckCircle2 } from 'lucide-react';
@@ -30,6 +31,7 @@ export function ReceiptExport({
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [landlordName, setLandlordName] = useState('');
+  const [receiptNotes, setReceiptNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -174,6 +176,16 @@ export function ReceiptExport({
               placeholder="VD: Nguyễn Văn B"
             />
           </div>
+
+          <div>
+            <Label>Ghi chú (nếu có)</Label>
+            <Textarea
+              value={receiptNotes}
+              onChange={(e) => setReceiptNotes(e.target.value)}
+              placeholder="VD: Đã thu đủ, còn nợ tháng trước..."
+              rows={2}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -232,6 +244,16 @@ export function ReceiptExport({
                 <p>Ngày thu: <span className="blank-line border-b border-dotted border-foreground inline-block min-w-[100px]">&nbsp;</span></p>
                 <p>Số tiền đã thu: <span className="blank-line border-b border-dotted border-foreground inline-block min-w-[150px]">&nbsp;</span></p>
               </div>
+
+              {receiptNotes && (
+                <>
+                  <Separator />
+                  <div className="pt-2">
+                    <p className="font-medium text-sm">Ghi chú:</p>
+                    <p className="text-sm italic">{receiptNotes}</p>
+                  </div>
+                </>
+              )}
 
               <div className="grid grid-cols-2 gap-8 pt-8 text-center">
                 <div>
