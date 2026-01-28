@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useDataBackup } from '@/hooks/useDataBackup';
+import { useLegacyImport } from '@/hooks/useLegacyImport';
+import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +36,9 @@ import {
   Trash2, 
   HardDrive,
   Clock,
-  FileJson
+  FileJson,
+  DatabaseBackup,
+  ArrowDownToLine
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -53,11 +57,14 @@ export default function DataBackupPage() {
     downloadBackup,
     uploadBackup 
   } = useDataBackup();
+  const { loading: legacyLoading, progress: legacyProgress, importLegacyData } = useLegacyImport();
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const legacyFileInputRef = useRef<HTMLInputElement>(null);
   const [saveSlots, setSaveSlots] = useState<ReturnType<typeof getSaveSlots>>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const [showLegacyProgress, setShowLegacyProgress] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -159,6 +166,36 @@ export default function DataBackupPage() {
     }
   };
 
+  const handleLegacyImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setShowLegacyProgress(true);
+    const result = await importLegacyData(file);
+    
+    if (result.success) {
+      toast({
+        title: 'Import thành công',
+        description: result.message,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      toast({
+        title: 'Lỗi import',
+        description: result.message,
+        variant: 'destructive',
+      });
+      setShowLegacyProgress(false);
+    }
+
+    // Reset input
+    if (legacyFileInputRef.current) {
+      legacyFileInputRef.current.value = '';
+    }
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -250,6 +287,51 @@ export default function DataBackupPage() {
             <div className="text-left">
               <p className="font-medium">Tải lên (Upload)</p>
               <p className="text-xs text-muted-foreground">Khôi phục từ file JSON</p>
+            </div>
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Legacy Import */}
+      <Card className="border-dashed border-primary/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <DatabaseBackup className="h-5 w-5 text-primary" />
+            Import dữ liệu cũ
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Import dữ liệu từ ứng dụng Finance Tracker phiên bản cũ (file JSON có cấu trúc financial_transactions_v2)
+          </p>
+          
+          {showLegacyProgress && legacyLoading && (
+            <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <span>{legacyProgress.status}</span>
+                <span>{legacyProgress.current}/{legacyProgress.total}</span>
+              </div>
+              <Progress value={legacyProgress.total > 0 ? (legacyProgress.current / legacyProgress.total) * 100 : 0} />
+            </div>
+          )}
+
+          <input
+            ref={legacyFileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleLegacyImport}
+          />
+          <Button 
+            className="w-full justify-start" 
+            variant="outline"
+            onClick={() => legacyFileInputRef.current?.click()}
+            disabled={loading || legacyLoading}
+          >
+            <ArrowDownToLine className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <p className="font-medium">Import từ file cũ</p>
+              <p className="text-xs text-muted-foreground">Chọn file JSON từ app cũ</p>
             </div>
           </Button>
         </CardContent>
