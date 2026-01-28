@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { MonthComparison } from '@/components/statistics/MonthComparison';
 import { BudgetOverview } from '@/components/statistics/BudgetOverview';
-import { CategoryPieChart } from '@/components/statistics/CategoryPieChart';
+import { EnhancedPieChart } from '@/components/statistics/EnhancedPieChart';
 import { DateRangeFilter, TimeframeType } from '@/components/statistics/DateRangeFilter';
 import type { Transaction } from '@/types/finance';
 
@@ -203,8 +203,8 @@ export default function StatisticsPage() {
         </Card>
       </div>
 
-      {/* Category Pie Chart */}
-      <CategoryPieChart 
+      {/* Enhanced Pie Chart with Leader Lines */}
+      <EnhancedPieChart 
         transactions={transactions} 
         title="Chi tiêu theo danh mục" 
       />
