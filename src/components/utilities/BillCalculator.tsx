@@ -39,9 +39,18 @@ export function BillCalculator({
   getVatPercent,
   onAddBill,
 }: BillCalculatorProps) {
+  // Default to 1st of last month → last day of last month
+  const getDefaultPeriod = () => {
+    const now = new Date();
+    const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    return { start: firstOfLastMonth, end: lastOfLastMonth };
+  };
+
+  const defaultPeriod = getDefaultPeriod();
   const [selectedMeter, setSelectedMeter] = useState('');
-  const [periodStart, setPeriodStart] = useState<Date>(new Date());
-  const [periodEnd, setPeriodEnd] = useState<Date>(new Date());
+  const [periodStart, setPeriodStart] = useState<Date>(defaultPeriod.start);
+  const [periodEnd, setPeriodEnd] = useState<Date>(defaultPeriod.end);
   const [previousReading, setPreviousReading] = useState('');
   const [currentReading, setCurrentReading] = useState('');
   const [loading, setLoading] = useState(false);

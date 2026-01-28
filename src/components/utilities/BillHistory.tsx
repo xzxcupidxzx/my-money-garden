@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Zap, Droplets, Trash2, Edit2, History } from 'lucide-react';
+import { Zap, Droplets, Trash2, Edit2, History, User, Home, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { UtilityMeter, UtilityBill, Tenant } from '@/hooks/useUtilities';
 import { formatCurrency } from '@/components/CurrencyDisplay';
 import {
@@ -19,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface BillHistoryProps {
   bills: UtilityBill[];
@@ -28,24 +30,101 @@ interface BillHistoryProps {
   onUpdateBill?: (id: string, data: Partial<UtilityBill>) => Promise<boolean>;
 }
 
+interface ConsolidatedBill {
+  key: string;
+  tenantId: string | null;
+  tenantName: string;
+  isMain: boolean;
+  periodMonth: number;
+  periodYear: number;
+  periodLabel: string;
+  electricity: UtilityBill | null;
+  water: UtilityBill | null;
+  totalAmount: number;
+}
+
 export function BillHistory({ bills, meters, tenants, onDeleteBill, onUpdateBill }: BillHistoryProps) {
   const [editingBill, setEditingBill] = useState<UtilityBill | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [editForm, setEditForm] = useState({
     previous_reading: '',
     current_reading: '',
   });
 
-  const getMeterInfo = (meterId: string) => {
-    const meter = meters.find(m => m.id === meterId);
-    if (!meter) return { name: 'Đồng hồ đã xóa', type: 'unknown', tenantName: null };
-    
-    const tenant = meter.tenant_id ? tenants.find(t => t.id === meter.tenant_id) : null;
-    return {
-      name: meter.name,
-      type: meter.type,
-      tenantName: tenant?.name || (meter.is_main ? 'Chủ nhà' : null),
-    };
+  // Group bills by tenant/landlord + month
+  const consolidatedBills = useMemo(() => {
+    const grouped = new Map<string, ConsolidatedBill>();
+
+    bills.forEach(bill => {
+      const meter = meters.find(m => m.id === bill.meter_id);
+      if (!meter) return;
+
+      const periodDate = new Date(bill.period_end);
+      const periodMonth = periodDate.getMonth();
+      const periodYear = periodDate.getFullYear();
+
+      // Determine tenant or landlord
+      let tenantId: string | null = null;
+      let tenantName = 'Không xác định';
+      let isMain = false;
+
+      if (meter.is_main) {
+        // For main meters, extract name from meter name (e.g., "Điện - Tên chủ hộ")
+        const namePart = meter.name.replace(/^(Điện|Nước)\s*-\s*/, '');
+        tenantName = namePart || 'Chủ hộ';
+        isMain = true;
+        tenantId = `main_${namePart}`;
+      } else if (meter.tenant_id) {
+        const tenant = tenants.find(t => t.id === meter.tenant_id);
+        tenantId = meter.tenant_id;
+        tenantName = tenant?.name || 'Người thuê';
+      }
+
+      const key = `${tenantId || 'unknown'}_${periodYear}_${periodMonth}`;
+
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          key,
+          tenantId,
+          tenantName,
+          isMain,
+          periodMonth,
+          periodYear,
+          periodLabel: format(periodDate, 'MM/yyyy', { locale: vi }),
+          electricity: null,
+          water: null,
+          totalAmount: 0,
+        });
+      }
+
+      const entry = grouped.get(key)!;
+      if (meter.type === 'electricity') {
+        entry.electricity = bill;
+      } else {
+        entry.water = bill;
+      }
+      entry.totalAmount += bill.total_amount;
+    });
+
+    // Sort by date descending, then by tenant name
+    return Array.from(grouped.values()).sort((a, b) => {
+      const dateCompare = (b.periodYear * 12 + b.periodMonth) - (a.periodYear * 12 + a.periodMonth);
+      if (dateCompare !== 0) return dateCompare;
+      return a.tenantName.localeCompare(b.tenantName);
+    });
+  }, [bills, meters, tenants]);
+
+  const toggleExpand = (key: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   };
 
   const startEdit = (bill: UtilityBill) => {
@@ -76,7 +155,12 @@ export function BillHistory({ bills, meters, tenants, onDeleteBill, onUpdateBill
     setDeleteConfirm(null);
   };
 
-  if (bills.length === 0) {
+  const getMeterType = (bill: UtilityBill) => {
+    const meter = meters.find(m => m.id === bill.meter_id);
+    return meter?.type || 'unknown';
+  };
+
+  if (consolidatedBills.length === 0) {
     return (
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
@@ -92,69 +176,172 @@ export function BillHistory({ bills, meters, tenants, onDeleteBill, onUpdateBill
     <div className="space-y-2">
       <h3 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
         <History className="h-4 w-4" />
-        Lịch sử hóa đơn ({bills.length})
+        Lịch sử hóa đơn ({consolidatedBills.length} kỳ)
       </h3>
       
-      {bills.slice(0, 20).map(bill => {
-        const meterInfo = getMeterInfo(bill.meter_id);
+      {consolidatedBills.slice(0, 20).map(consolidated => {
+        const isExpanded = expandedItems.has(consolidated.key);
+        
         return (
-          <Card key={bill.id}>
-            <CardContent className="p-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  {meterInfo.type === 'electricity' ? (
-                    <div className="p-2 bg-yellow-500/10 rounded-lg">
-                      <Zap className="h-4 w-4 text-yellow-500" />
+          <Card key={consolidated.key}>
+            <Collapsible open={isExpanded} onOpenChange={() => toggleExpand(consolidated.key)}>
+              <CollapsibleTrigger asChild>
+                <CardContent className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${consolidated.isMain ? 'bg-primary/10' : 'bg-secondary'}`}>
+                        {consolidated.isMain ? (
+                          <Home className="h-4 w-4 text-primary" />
+                        ) : (
+                          <User className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{consolidated.tenantName}</p>
+                          <Badge variant="outline" className="text-xs">
+                            Tháng {consolidated.periodLabel}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                          {consolidated.electricity && (
+                            <span className="flex items-center gap-1">
+                              <Zap className="h-3 w-3 text-yellow-500" />
+                              {consolidated.electricity.usage.toLocaleString()} kWh
+                            </span>
+                          )}
+                          {consolidated.water && (
+                            <span className="flex items-center gap-1">
+                              <Droplets className="h-3 w-3 text-blue-500" />
+                              {consolidated.water.usage.toLocaleString()} m³
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                    </div>
-                  )}
-                  <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm">{meterInfo.name}</p>
-                      {meterInfo.tenantName && (
-                        <Badge variant="outline" className="text-xs">{meterInfo.tenantName}</Badge>
+                      <div className="text-right">
+                        <p className="font-mono font-bold text-sm text-primary">
+                          {formatCurrency(consolidated.totalAmount)}
+                        </p>
+                      </div>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(bill.period_start), 'dd/MM')} - {format(new Date(bill.period_end), 'dd/MM/yyyy')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {bill.previous_reading.toLocaleString()} → {bill.current_reading.toLocaleString()} = {bill.usage.toLocaleString()} {meterInfo.type === 'electricity' ? 'kWh' : 'm³'}
-                    </p>
+                  </div>
+                </CardContent>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent>
+                <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                  {/* Electricity details */}
+                  {consolidated.electricity && (
+                    <div className="flex items-center justify-between p-2 bg-yellow-500/5 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-500" />
+                        <div className="text-sm">
+                          <span className="font-medium">Điện: </span>
+                          <span className="text-muted-foreground">
+                            {consolidated.electricity.previous_reading.toLocaleString()} → {consolidated.electricity.current_reading.toLocaleString()}
+                          </span>
+                          <span className="ml-2 font-mono">
+                            = {consolidated.electricity.usage.toLocaleString()} kWh
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-medium">
+                          {formatCurrency(consolidated.electricity.total_amount)}
+                        </span>
+                        <div className="flex gap-1">
+                          {onUpdateBill && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEdit(consolidated.electricity!);
+                              }}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm(consolidated.electricity!.id);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Water details */}
+                  {consolidated.water && (
+                    <div className="flex items-center justify-between p-2 bg-blue-500/5 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Droplets className="h-4 w-4 text-blue-500" />
+                        <div className="text-sm">
+                          <span className="font-medium">Nước: </span>
+                          <span className="text-muted-foreground">
+                            {consolidated.water.previous_reading.toLocaleString()} → {consolidated.water.current_reading.toLocaleString()}
+                          </span>
+                          <span className="ml-2 font-mono">
+                            = {consolidated.water.usage.toLocaleString()} m³
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-medium">
+                          {formatCurrency(consolidated.water.total_amount)}
+                        </span>
+                        <div className="flex gap-1">
+                          {onUpdateBill && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEdit(consolidated.water!);
+                              }}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm(consolidated.water!.id);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Period info */}
+                  <div className="text-xs text-muted-foreground text-center pt-1">
+                    Kỳ: {format(new Date((consolidated.electricity || consolidated.water)!.period_start), 'dd/MM')} - {format(new Date((consolidated.electricity || consolidated.water)!.period_end), 'dd/MM/yyyy')}
                   </div>
                 </div>
-                <div className="text-right flex items-center gap-2">
-                  <div>
-                    <p className="font-mono font-bold text-sm text-primary">
-                      {formatCurrency(bill.total_amount)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {onUpdateBill && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => startEdit(bill)}
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => setDeleteConfirm(bill.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
         );
       })}
@@ -163,7 +350,9 @@ export function BillHistory({ bills, meters, tenants, onDeleteBill, onUpdateBill
       <Dialog open={!!editingBill} onOpenChange={(open) => !open && setEditingBill(null)}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa hóa đơn</DialogTitle>
+            <DialogTitle>
+              Chỉnh sửa {editingBill && getMeterType(editingBill) === 'electricity' ? 'điện' : 'nước'}
+            </DialogTitle>
             <DialogDescription>
               Sửa chỉ số đọc để tính lại tiền
             </DialogDescription>
