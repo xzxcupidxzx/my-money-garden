@@ -82,11 +82,16 @@ export default {
   				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
-  		},
+		borderRadius: {
+			none: '0',
+			sm: 'calc(var(--radius) - 4px)',
+			DEFAULT: 'var(--radius)',
+			md: 'var(--radius)',
+			lg: 'calc(var(--radius) + 8px)',
+			xl: 'calc(var(--radius) + 16px)',
+			'2xl': 'calc(var(--radius) + 24px)',
+			full: '9999px'
+		},
   		keyframes: {
   			'accordion-down': {
   				from: {
@@ -176,6 +181,16 @@ export default {
 				'monospace'
 			]
 		},
+		fontSize: {
+			// Typography scale from styleguide
+			'headline-1': ['2rem', { lineHeight: '2.5rem', fontWeight: '700', letterSpacing: '-0.02em' }],
+			'headline-2': ['1.5rem', { lineHeight: '2rem', fontWeight: '600', letterSpacing: '-0.01em' }],
+			'subtitle': ['1.125rem', { lineHeight: '1.75rem', fontWeight: '500' }],
+			'body-1': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+			'body-2': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+			'caption': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }],
+			'button': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500', letterSpacing: '0.01em' }]
+		},
 		letterSpacing: {
 			tighter: '-0.05em',
 			tight: '-0.025em',
@@ -183,8 +198,43 @@ export default {
 			wide: '0.025em',
 			wider: '0.05em',
 			widest: '0.1em'
+		},
+		// Spacing scale from styleguide: 4, 8, 16, 24, 32, 48
+		spacing: {
+			'0': '0',
+			'px': '1px',
+			'0.5': '0.125rem',
+			'1': '0.25rem',   // 4px
+			'2': '0.5rem',    // 8px
+			'3': '0.75rem',
+			'4': '1rem',      // 16px
+			'5': '1.25rem',
+			'6': '1.5rem',    // 24px
+			'7': '1.75rem',
+			'8': '2rem',      // 32px
+			'9': '2.25rem',
+			'10': '2.5rem',
+			'11': '2.75rem',
+			'12': '3rem',     // 48px
+			'14': '3.5rem',
+			'16': '4rem',
+			'20': '5rem',
+			'24': '6rem',
+			'28': '7rem',
+			'32': '8rem',
+			'36': '9rem',
+			'40': '10rem',
+			'44': '11rem',
+			'48': '12rem',
+			'52': '13rem',
+			'56': '14rem',
+			'60': '15rem',
+			'64': '16rem',
+			'72': '18rem',
+			'80': '20rem',
+			'96': '24rem'
 		}
-  	}
+	}
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
