@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type ThemeColorOption = 'blue' | 'purple' | 'green' | 'orange' | 'rose' | 'teal';
+export type ThemeColorOption = 'blue' | 'purple' | 'green' | 'orange' | 'rose' | 'teal' | 'black' | 'white' | 'red';
 
 interface ThemeColor {
   name: string;
@@ -16,6 +16,9 @@ export const THEME_COLORS: ThemeColor[] = [
   { name: 'Cam', value: 'orange', primary: '25 95% 53%', primaryDark: '25 90% 58%' },
   { name: 'Hồng', value: 'rose', primary: '350 80% 55%', primaryDark: '350 75% 60%' },
   { name: 'Xanh ngọc', value: 'teal', primary: '180 65% 45%', primaryDark: '180 60% 52%' },
+  { name: 'Đen', value: 'black', primary: '0 0% 15%', primaryDark: '0 0% 85%' },
+  { name: 'Trắng', value: 'white', primary: '0 0% 95%', primaryDark: '0 0% 25%' },
+  { name: 'Đỏ', value: 'red', primary: '0 85% 50%', primaryDark: '0 80% 55%' },
 ];
 
 const STORAGE_KEY = 'finance-theme-color';
