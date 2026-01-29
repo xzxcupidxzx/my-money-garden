@@ -24,6 +24,7 @@ import DataBackup from "./pages/DataBackup";
 import Management from "./pages/Management";
 import Utilities from "./pages/Utilities";
 import IconDemo from "./pages/IconDemo";
+import LogoPreview from "./pages/LogoPreview";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/backup" element={<DataBackup />} />
                 <Route path="/utilities" element={<Utilities />} />
                 <Route path="/icons" element={<IconDemo />} />
+                <Route path="/logo-preview" element={<LogoPreview />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

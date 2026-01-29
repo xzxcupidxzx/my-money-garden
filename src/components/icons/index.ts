@@ -4,3 +4,4 @@
 export * from './TechIcons';
 export * from './TechIconPicker';
 export * from './TechIconDemo';
+export * from './AppLogo';
