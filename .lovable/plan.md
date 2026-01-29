@@ -1,97 +1,101 @@
 
-# Kế hoạch Tích hợp DeepSeek AI vào Finance Tracker
+# Kế hoạch Tạo App Icon Blueprint Style
 
 ## Tổng quan
+Thiết kế App Icon cho PWA theo phong cách Industrial-Tech/Blueprint/HUD đồng nhất với design language của ứng dụng Finance Tracker.
 
-Thay thế regex parser hiện tại bằng API DeepSeek thực sự từ Cloudflare Worker của bạn, đồng thời giữ lại các tính năng hay từ code cũ như:
-- Hệ thống note queue (pending → processing → success/failed)  
-- Tự học category từ lịch sử
-- Cho phép chỉnh sửa note trước khi xử lý
+## Design Concept
+
+### Đặc điểm App Icon Blueprint Style:
+- **Corner markers**: Các góc vuông đặc trưng (╔ ╗ ╚ ╝)
+- **Monoline strokes**: Nét vẽ đồng nhất 1.5-2px
+- **Chamfered edges**: Góc cắt chéo kiểu kỹ thuật
+- **Minimal color**: Nền đơn sắc + accent color (Primary Blue hoặc Green)
+- **Grid-based**: Thiết kế trên lưới 512x512px
+
+### Concept chính: "Finance HUD"
+```text
+╔════════════════════════════╗
+║                            ║
+║     ┌────────────────┐     ║
+║     │   📊           │     ║
+║     │     ╱‾‾‾╲      │     ║
+║     │   ╱      ╲     │     ║
+║     │  ▬▬▬  $   ╲    │     ║
+║     └────────────────┘     ║
+║                            ║
+╚════════════════════════════╝
+```
+
+**Ý tưởng:**
+- Biểu đồ đi lên (biểu tượng tăng trưởng tài chính)
+- Ký hiệu tiền tệ ($, ₫) đơn giản
+- Khung HUD corners bao quanh
+- Nền gradient nhẹ hoặc solid color
 
 ---
 
 ## Chi tiết kỹ thuật
 
-### Bước 1: Tạo Edge Function proxy
+### Bước 1: Tạo SVG Component cho App Icon
 
-Tạo edge function `parse-note` để gọi Cloudflare Worker, tránh CORS và bảo mật endpoint.
+**File mới**: `src/components/icons/AppLogo.tsx`
 
-**File**: `supabase/functions/parse-note/index.ts`
+Component SVG có thể xuất ra nhiều kích thước:
+- 192x192 (pwa-192x192.png)
+- 512x512 (pwa-512x512.png)  
+- 180x180 (apple-touch-icon.png)
+- 32x32 (favicon.png)
 
+### Bước 2: Tạo trang Preview Logo
+
+**File mới**: `src/pages/LogoPreview.tsx`
+
+Trang để xem trước và export các phiên bản icon:
+- Preview trên nhiều kích thước
+- Preview trên nền sáng/tối
+- Nút download PNG cho từng size
+
+### Bước 3: Tạo PNG files
+
+Sau khi thiết kế xong, export ra các file PNG:
+- `public/favicon.png` (32x32)
+- `public/apple-touch-icon.png` (180x180)
+- `public/pwa-192x192.png` (192x192)
+- `public/pwa-512x512.png` (512x512)
+
+---
+
+## Variants đề xuất
+
+### Option A: "Chart Growth"
+Biểu đồ thanh đi lên với HUD frame
 ```text
-Flow:
-Frontend → Edge Function → Cloudflare Worker (deepseek) → Response
+╔══╗          ╔══╗
+ ║  ▄         ║
+ ║ ▄█▄        ║
+ ║▄███▄       ║
+╚══╝          ╚══╝
 ```
 
-Edge function sẽ:
-- Nhận text + categories + accounts từ frontend
-- Gọi `https://deepseek.hoangthaison2812.workers.dev`
-- Xử lý response và trả về cho frontend
-
-### Bước 2: Tạo hooks mới
-
-**File**: `src/hooks/useAiNotes.ts`
-
-- Quản lý state notes với status: pending | processing | success | failed
-- Lưu vào database `ai_notes` thay vì localStorage
-- Hàm `processNote()` gọi edge function
-- Hàm `learnCategoryFromHistory()` copy từ code cũ
-
-### Bước 3: Cập nhật Database Schema
-
-Sửa table `ai_notes` để hỗ trợ workflow mới:
-
-```sql
-ALTER TABLE ai_notes
-  ADD COLUMN IF NOT EXISTS error_message text;
-```
-
-### Bước 4: Cập nhật UI (AiNote.tsx)
-
-Redesign UI theo flow mới:
-
+### Option B: "Currency Circle"  
+Ký hiệu tiền trong vòng tròn kỹ thuật
 ```text
-┌─────────────────────────────────────────┐
-│  📝 Nhập ghi chú                        │
-│  ┌─────────────────────────────────────┐│
-│  │ ăn sáng 50k, taxi grab 100k        ││
-│  └─────────────────────────────────────┘│
-│  [💾 Lưu Ghi Chú] [⚡ Xử lý tất cả]    │
-├─────────────────────────────────────────┤
-│  📋 Danh sách ghi chú                   │
-├─────────────────────────────────────────┤
-│  🕐 Pending                             │
-│  ┌─────────────────────────────────────┐│
-│  │ "ăn sáng 50k"  [✏️] [🔮] [🗑️]     ││
-│  └─────────────────────────────────────┘│
-│  ✅ Đã xử lý                            │
-│  ┌─────────────────────────────────────┐│
-│  │ Ăn uống: -50,000 ✓                 ││
-│  └─────────────────────────────────────┘│
-└─────────────────────────────────────────┘
+╔══╗          ╔══╗
+ ║   ╭───╮    ║
+ ║   │ $ │    ║
+ ║   ╰───╯    ║
+╚══╝          ╚══╝
 ```
 
-**Tính năng UI mới:**
-- Nút Lưu: Chỉ lưu note vào queue (pending)
-- Nút Xử lý AI: Gọi DeepSeek và tạo giao dịch
-- Nút Sửa: Đưa text lên input để chỉnh sửa
-- Status badges: pending/processing/success/failed
-
-### Bước 5: Tính năng Tự học Category
-
-Port logic `learnCategoryFromHistory` vào hook:
-
-```typescript
-// Tìm category phổ biến nhất từ các giao dịch cũ có mô tả tương tự
-const learnCategoryFromHistory = (
-  description: string, 
-  aiSuggestedCategory: string,
-  type: 'income' | 'expense',
-  transactions: Transaction[]
-) => {
-  // Match keywords trong description với history
-  // Trả về category có score cao nhất
-}
+### Option C: "Dashboard Grid"
+Grid 4 ô như dashboard icon hiện tại
+```text
+╔══╗          ╔══╗
+ ║ ┌─┐ ┌─┐    ║
+ ║ └─┘ └─┘    ║
+ ║ ┌─┐ ┌─┐    ║
+╚══╝          ╚══╝
 ```
 
 ---
@@ -99,56 +103,37 @@ const learnCategoryFromHistory = (
 ## Cấu trúc Files
 
 ```text
-supabase/functions/
-  └── parse-note/
-      └── index.ts          # Edge function gọi DeepSeek
-
 src/
-  ├── hooks/
-  │   └── useAiNotes.ts     # Hook quản lý AI notes
+  └── components/
+      └── icons/
+          └── AppLogo.tsx      # SVG Component cho logo
   └── pages/
-      └── AiNote.tsx        # UI cập nhật
+      └── LogoPreview.tsx      # Trang preview và export
+
+public/
+  ├── favicon.png              # 32x32 (update)
+  ├── apple-touch-icon.png     # 180x180 (update)
+  ├── pwa-192x192.png          # 192x192 (update)
+  └── pwa-512x512.png          # 512x512 (update)
 ```
 
 ---
 
-## Response Format từ DeepSeek
+## Màu sắc
 
-```typescript
-interface DeepSeekTransaction {
-  type: 'Thu' | 'Chi' | 'Transfer';
-  amount: number;
-  category: string;        // Tên category (string)
-  account: string;         // Tên account (string)  
-  description: string;
-  datetime?: string;       // ISO format
-  toAccount?: string;      // Nếu Transfer
-}
-```
-
-**Lưu ý mapping**: 
-- `"Thu"` → `"income"`
-- `"Chi"` → `"expense"`
-- Category/Account name → lookup ID từ database
+| Element | Light Mode | Dark Mode |
+|---------|------------|-----------|
+| Background | `#3b82f6` (Primary Blue) | `#1e40af` |
+| Icon strokes | `#ffffff` | `#ffffff` |
+| Corner markers | `#ffffff` (40% opacity) | `#ffffff` (40% opacity) |
+| Accent | `#22c55e` (Income Green) | `#22c55e` |
 
 ---
 
-## Ưu điểm phương án này
+## Kết quả mong đợi
 
-1. **Tận dụng AI thật**: DeepSeek hiểu ngữ cảnh tốt hơn regex
-2. **Giữ code đã chạy tốt**: Không đổi Cloudflare Worker
-3. **Tự học**: Category ngày càng chính xác
-4. **Linh hoạt**: Cho sửa/xóa note trước khi xử lý
-5. **Không cần API key**: Worker public, không tốn chi phí AI
-6. **Bảo mật**: Edge function proxy, không expose endpoint trực tiếp
-
----
-
-## Rủi ro và Mitigation
-
-| Rủi ro | Giải pháp |
-|--------|-----------|
-| Worker down | Fallback về regex parser hiện tại |
-| Response không đúng format | Validate + error handling |
-| CORS | Edge function làm proxy |
-| Rate limit | Debounce + queue processing |
+1. App Icon mới theo phong cách Blueprint/Industrial-Tech
+2. Đồng nhất với design system hiện tại của app
+3. Có thể nhận diện ngay ở kích thước nhỏ (32px)
+4. Trông chuyên nghiệp trên màn hình điện thoại
+5. Có trang preview để xem và export các variants
