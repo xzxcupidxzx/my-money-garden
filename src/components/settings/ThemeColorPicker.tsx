@@ -13,6 +13,9 @@ export function ThemeColorPicker() {
       orange: 'bg-[hsl(25,95%,53%)]',
       rose: 'bg-[hsl(350,80%,55%)]',
       teal: 'bg-[hsl(180,65%,45%)]',
+      black: 'bg-[hsl(0,0%,15%)]',
+      white: 'bg-[hsl(0,0%,95%)] border border-gray-300',
+      red: 'bg-[hsl(0,85%,50%)]',
     };
     return colorMap[color];
   };
