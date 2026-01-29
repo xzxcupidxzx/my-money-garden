@@ -1,76 +1,50 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { useCategories } from '@/hooks/useCategories';
-import { useAccounts } from '@/hooks/useAccounts';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useAiNotes } from '@/hooks/useAiNotes';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, Send, Check, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { 
+  Sparkles, 
+  Save, 
+  Zap, 
+  Check, 
+  AlertCircle, 
+  Clock, 
+  Loader2, 
+  Pencil, 
+  Trash2,
+  Wand2 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CurrencyDisplay } from '@/components/CurrencyDisplay';
-import { supabase } from '@/integrations/supabase/client';
-import type { AiNote, ParsedTransaction } from '@/types/finance';
-
-// Simple parser for Vietnamese money notes
-function parseNaturalLanguage(text: string, categories: { name: string; id: string; type: string }[]): ParsedTransaction[] {
-  const results: ParsedTransaction[] = [];
-  
-  // Split by comma or newline
-  const parts = text.split(/[,\n]+/).map(p => p.trim()).filter(Boolean);
-  
-  for (const part of parts) {
-    // Match patterns like "Lương 20M", "Ăn sáng 50k", "Taxi 100k"
-    const moneyMatch = part.match(/(.+?)\s*(\d+(?:\.\d+)?)\s*([kmMK])?$/i);
-    
-    if (moneyMatch) {
-      const description = moneyMatch[1].trim();
-      let amount = parseFloat(moneyMatch[2]);
-      const unit = moneyMatch[3]?.toLowerCase();
-      
-      // Convert units
-      if (unit === 'k') amount *= 1000;
-      if (unit === 'm') amount *= 1000000;
-      
-      // Try to match category
-      const matchedCategory = categories.find(c => 
-        description.toLowerCase().includes(c.name.toLowerCase()) ||
-        c.name.toLowerCase().includes(description.toLowerCase())
-      );
-      
-      // Determine type based on keywords or category
-      const incomeKeywords = ['lương', 'salary', 'thưởng', 'bonus', 'thu nhập', 'income'];
-      const isIncome = incomeKeywords.some(k => description.toLowerCase().includes(k)) ||
-        matchedCategory?.type === 'income';
-      
-      results.push({
-        type: isIncome ? 'income' : 'expense',
-        amount,
-        description,
-        category_id: matchedCategory?.id,
-        suggested_category: matchedCategory?.name,
-      });
-    }
-  }
-  
-  return results;
-}
+import type { AiNote } from '@/types/finance';
 
 export default function AiNotePage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { categories } = useCategories();
-  const { accounts } = useAccounts();
-  const { addTransaction, refetch } = useTransactions();
   const { toast } = useToast();
   
+  const {
+    notes,
+    pendingNotes,
+    successNotes,
+    errorNotes,
+    loading,
+    processingIds,
+    saveNote,
+    updateNote,
+    deleteNote,
+    processNote,
+    processAllPending,
+  } = useAiNotes();
+
   const [input, setInput] = useState('');
-  const [processing, setProcessing] = useState(false);
-  const [notes, setNotes] = useState<AiNote[]>([]);
-  const [previewData, setPreviewData] = useState<ParsedTransaction[]>([]);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -78,111 +52,115 @@ export default function AiNotePage() {
     }
   }, [user, authLoading, navigate]);
 
-  // Fetch existing notes
-  useEffect(() => {
-    if (user) {
-      fetchNotes();
-    }
-  }, [user]);
-
-  const fetchNotes = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('ai_notes')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    
-    if (data) {
-      setNotes(data as unknown as AiNote[]);
-    }
-  };
-
-  const handleInputChange = (value: string) => {
-    setInput(value);
-    // Preview parsing
-    if (value.trim()) {
-      const parsed = parseNaturalLanguage(value, categories.map(c => ({ 
-        name: c.name, 
-        id: c.id, 
-        type: c.type 
-      })));
-      setPreviewData(parsed);
-    } else {
-      setPreviewData([]);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!input.trim() || !user || accounts.length === 0) return;
-    
-    setProcessing(true);
-    
-    try {
-      const parsed = parseNaturalLanguage(input, categories.map(c => ({ 
-        name: c.name, 
-        id: c.id, 
-        type: c.type 
-      })));
-      
-      if (parsed.length === 0) {
+  const handleSaveOrUpdate = async () => {
+    if (!input.trim()) {
+      if (editingNoteId) {
+        // Cancel edit mode
+        setEditingNoteId(null);
+        setInput('');
+      } else {
         toast({
-          title: 'Không hiểu được',
-          description: 'Vui lòng thử lại với định dạng: "Mô tả số tiền" (ví dụ: "Ăn sáng 50k")',
+          title: 'Lỗi',
+          description: 'Vui lòng nhập nội dung ghi chú',
           variant: 'destructive',
         });
-        setProcessing(false);
-        return;
       }
-      
-      // Save AI note
-      await supabase
-        .from('ai_notes')
-        .insert({
-          user_id: user.id,
-          raw_text: input,
-          parsed_data: parsed as unknown as Record<string, never>[],
-          status: 'success',
-        });
-      
-      // Create transactions
-      const defaultAccountId = accounts[0].id;
-      
-      for (const item of parsed) {
-        await addTransaction({
-          type: item.type,
-          amount: item.amount,
-          category_id: item.category_id || null,
-          account_id: defaultAccountId,
-          to_account_id: null,
-          description: item.description,
-          date: new Date().toISOString(),
-          is_recurring: false,
-          recurring_id: null,
+      return;
+    }
+
+    let success = false;
+    if (editingNoteId) {
+      success = await updateNote(editingNoteId, input);
+      if (success) {
+        setEditingNoteId(null);
+        setInput('');
+        toast({
+          title: 'Đã cập nhật',
+          description: 'Ghi chú đã được cập nhật',
         });
       }
-      
-      toast({
-        title: 'Thành công!',
-        description: `Đã thêm ${parsed.length} giao dịch`,
-      });
-      
-      setInput('');
-      setPreviewData([]);
-      fetchNotes();
-      refetch();
-      
-    } catch (error) {
-      console.error('Error processing note:', error);
+    } else {
+      success = await saveNote(input);
+      if (success) {
+        setInput('');
+        toast({
+          title: 'Đã lưu',
+          description: 'Ghi chú đã được lưu vào hàng đợi',
+        });
+      }
+    }
+  };
+
+  const handleEditNote = (note: AiNote) => {
+    setEditingNoteId(note.id);
+    setInput(note.raw_text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingNoteId(null);
+    setInput('');
+  };
+
+  const handleDeleteNote = async (id: string) => {
+    if (editingNoteId === id) {
       toast({
         title: 'Lỗi',
-        description: 'Không thể xử lý ghi chú',
+        description: 'Đang chỉnh sửa ghi chú này, hãy hủy sửa trước',
         variant: 'destructive',
       });
-    } finally {
-      setProcessing(false);
+      return;
+    }
+    await deleteNote(id);
+  };
+
+  const handleProcessNote = async (id: string) => {
+    if (editingNoteId === id) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng lưu chỉnh sửa trước khi xử lý',
+        variant: 'destructive',
+      });
+      return;
+    }
+    await processNote(id);
+  };
+
+  const getStatusBadge = (note: AiNote) => {
+    const isProcessing = processingIds.has(note.id);
+    
+    if (isProcessing) {
+      return (
+        <Badge variant="outline" className="gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          Đang xử lý
+        </Badge>
+      );
+    }
+
+    switch (note.status) {
+      case 'pending':
+        return (
+          <Badge variant="outline" className="gap-1 text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            Chờ xử lý
+          </Badge>
+        );
+      case 'success':
+        return (
+          <Badge variant="success" className="gap-1">
+            <Check className="h-3 w-3" />
+            Hoàn thành
+          </Badge>
+        );
+      case 'error':
+        return (
+          <Badge variant="error" className="gap-1">
+            <AlertCircle className="h-3 w-3" />
+            Lỗi
+          </Badge>
+        );
+      default:
+        return null;
     }
   };
 
@@ -195,105 +173,215 @@ export default function AiNotePage() {
     );
   }
 
+  const unprocessedNotes = [...pendingNotes, ...errorNotes];
+
   return (
     <div className="p-4 space-y-4 pb-24">
+      {/* Header */}
       <div className="flex items-center gap-2">
         <Sparkles className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">AI Magic Note</h1>
       </div>
 
+      {/* Input Card */}
       <Card>
         <CardContent className="p-4">
           <p className="text-sm text-muted-foreground mb-3">
-            Nhập ghi chú tự nhiên để thêm giao dịch nhanh. Ví dụ:
+            Nhập ghi chú tự nhiên, AI sẽ tự động phân tích và tạo giao dịch:
           </p>
           <div className="text-sm bg-muted/50 p-3 rounded-lg mb-4 font-mono">
-            Lương 20M, Ăn sáng 50k, Taxi 100k
+            Lương 20M, Ăn sáng 50k, Taxi grab 100k
           </div>
           
           <Textarea
             placeholder="Nhập ghi chú của bạn..."
             value={input}
-            onChange={(e) => handleInputChange(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             className="min-h-24 resize-none"
           />
-          
-          {/* Preview */}
-          {previewData.length > 0 && (
-            <div className="mt-3 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Xem trước:</p>
-              {previewData.map((item, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "flex items-center justify-between p-2 rounded-lg text-sm",
-                    item.type === 'income' ? 'bg-income/10' : 'bg-expense/10'
-                  )}
-                >
-                  <div>
-                    <span className="font-medium">{item.description}</span>
-                    {item.suggested_category && (
-                      <span className="text-muted-foreground ml-2">
-                        → {item.suggested_category}
-                      </span>
-                    )}
-                  </div>
-                  <span className={cn(
-                    "font-semibold",
-                    item.type === 'income' ? 'text-income' : 'text-expense'
-                  )}>
-                    {item.type === 'income' ? '+' : '-'}
-                    <CurrencyDisplay amount={item.amount} />
-                  </span>
-                </div>
-              ))}
-            </div>
+
+          {editingNoteId && (
+            <p className="text-sm text-primary mt-2 flex items-center gap-1">
+              <Pencil className="h-3 w-3" />
+              Đang chỉnh sửa ghi chú
+            </p>
           )}
           
-          <Button
-            className="w-full mt-4"
-            onClick={handleSubmit}
-            disabled={processing || !input.trim()}
-          >
-            {processing ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant={editingNoteId ? "default" : "outline"}
+              className="flex-1"
+              onClick={handleSaveOrUpdate}
+              disabled={!input.trim() && !editingNoteId}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {editingNoteId ? 'Cập nhật' : 'Lưu ghi chú'}
+            </Button>
+            
+            {editingNoteId ? (
+              <Button variant="ghost" onClick={handleCancelEdit}>
+                Hủy
+              </Button>
             ) : (
-              <Send className="h-4 w-4 mr-2" />
+              <Button
+                className="flex-1"
+                onClick={processAllPending}
+                disabled={loading || unprocessedNotes.length === 0}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4 mr-2" />
+                )}
+                Xử lý tất cả ({unprocessedNotes.length})
+              </Button>
             )}
-            Xử lý & Thêm giao dịch
-          </Button>
+          </div>
         </CardContent>
       </Card>
 
-      {/* History */}
-      {notes.length > 0 && (
+      {/* Pending Notes */}
+      {unprocessedNotes.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Lịch sử ghi chú</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              Chờ xử lý ({unprocessedNotes.length})
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {notes.map((note) => (
+            {unprocessedNotes.map((note) => (
               <div
                 key={note.id}
-                className="flex items-start justify-between py-2 border-b last:border-0"
+                className={cn(
+                  "p-3 rounded-lg border",
+                  note.status === 'error' ? 'border-destructive/50 bg-destructive/5' : 'bg-muted/30',
+                  editingNoteId === note.id && 'ring-2 ring-primary'
+                )}
               >
-                <div className="flex items-start gap-2">
-                  {note.status === 'success' ? (
-                    <Check className="h-4 w-4 text-income mt-1" />
-                  ) : note.status === 'error' ? (
-                    <AlertCircle className="h-4 w-4 text-destructive mt-1" />
-                  ) : (
-                    <Clock className="h-4 w-4 text-muted-foreground mt-1" />
-                  )}
-                  <div>
-                    <p className="text-sm">{note.raw_text}</p>
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {note.raw_text}
+                    </p>
+                    {note.error_message && (
+                      <p className="text-xs text-destructive mt-1">
+                        {note.error_message}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
                       {new Date(note.created_at).toLocaleString('vi-VN')}
                     </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    {getStatusBadge(note)}
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleEditNote(note)}
+                        disabled={processingIds.has(note.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleProcessNote(note.id)}
+                        disabled={processingIds.has(note.id)}
+                      >
+                        <Wand2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteNote(note.id)}
+                        disabled={processingIds.has(note.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Processed Notes */}
+      {successNotes.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Check className="h-5 w-5 text-income" />
+              Đã xử lý ({successNotes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {successNotes.slice(0, 10).map((note) => (
+              <div
+                key={note.id}
+                className="p-3 rounded-lg bg-income/5 border border-income/20"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words">
+                      {note.raw_text}
+                    </p>
+                    {note.parsed_data && note.parsed_data.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {note.parsed_data.map((tx, idx) => (
+                          <div 
+                            key={idx}
+                            className={cn(
+                              "text-sm flex items-center gap-2",
+                              tx.type === 'income' ? 'text-income' : 'text-expense'
+                            )}
+                          >
+                            <span>{tx.suggested_category || tx.description}</span>
+                            <span className="font-medium">
+                              {tx.type === 'income' ? '+' : '-'}
+                              <CurrencyDisplay amount={tx.amount} />
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(note.created_at).toLocaleString('vi-VN')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(note)}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteNote(note.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty State */}
+      {notes.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Chưa có ghi chú nào</p>
+            <p className="text-sm mt-1">
+              Nhập ghi chú phía trên để bắt đầu
+            </p>
           </CardContent>
         </Card>
       )}
