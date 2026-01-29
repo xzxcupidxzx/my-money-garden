@@ -412,8 +412,8 @@
     --chamfer-size: 8px;
     --chamfer-size-sm: 6px;
     --chamfer-size-lg: 12px;
-    --corner-thickness: 4px;
-    --corner-size: 12px;
+    --corner-thickness: 2px;
+    --corner-size: 16px;
   }
 
   /* Base chamfer clip-path */
