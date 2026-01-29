@@ -2,11 +2,9 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   History, 
-  PieChart, 
   Briefcase, 
   Settings,
-  Sparkles,
-  Zap
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,7 +12,6 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Giao dịch' },
   { to: '/history', icon: History, label: 'Lịch sử' },
-  { to: '/utilities', icon: Zap, label: 'Điện nước' },
   { to: '/management', icon: Briefcase, label: 'Quản lý' },
   { to: '/settings', icon: Settings, label: 'Cài đặt' },
 ];
@@ -78,7 +75,7 @@ export function BottomNav() {
           </div>
         </NavLink>
 
-        {navItems.slice(2).map((item) => (
+        {navItems.slice(2, 4).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

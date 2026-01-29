@@ -21,11 +21,12 @@ import {
   Plus,
   AlertTriangle,
   Wallet,
+  Zap,
+  ChevronLeft,
 } from 'lucide-react';
 import { format, addMonths, subMonths } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { ChevronLeft } from 'lucide-react';
 
 export default function ManagementPage() {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ export default function ManagementPage() {
       </div>
 
       <Tabs defaultValue="installments" className="w-full">
-        <TabsList className="w-full grid grid-cols-3">
+        <TabsList className="w-full grid grid-cols-4">
           <TabsTrigger value="installments" className="text-xs sm:text-sm">
             <CreditCard className="h-4 w-4 mr-1" />
             Trả góp
@@ -93,6 +94,10 @@ export default function ManagementPage() {
           <TabsTrigger value="recurring" className="text-xs sm:text-sm">
             <RefreshCw className="h-4 w-4 mr-1" />
             Định kỳ
+          </TabsTrigger>
+          <TabsTrigger value="utilities" className="text-xs sm:text-sm">
+            <Zap className="h-4 w-4 mr-1" />
+            Điện nước
           </TabsTrigger>
         </TabsList>
 
@@ -372,6 +377,28 @@ export default function ManagementPage() {
           <Link to="/recurring" className="block mt-4">
             <Button variant="outline" className="w-full">
               Xem tất cả & Quản lý
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </Link>
+        </TabsContent>
+
+        {/* Utilities Tab */}
+        <TabsContent value="utilities" className="mt-4 space-y-4">
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-5 w-5 text-primary" />
+                <span className="font-medium">Quản lý Điện Nước</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Theo dõi công tơ, tính tiền điện nước và xuất phiếu thu cho người thuê.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Link to="/utilities" className="block">
+            <Button variant="outline" className="w-full">
+              Mở Quản lý Điện Nước
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
