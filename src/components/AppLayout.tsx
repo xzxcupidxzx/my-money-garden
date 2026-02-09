@@ -6,7 +6,7 @@ export function AppLayout() {
   const { getPatternClass } = useBackgroundPattern();
 
   return (
-    <div className={`min-h-screen pb-20 ${getPatternClass()}`}>
+    <div className={`min-h-screen ${getPatternClass()}`} style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
       <main className="max-w-lg mx-auto">
         <Outlet />
       </main>
