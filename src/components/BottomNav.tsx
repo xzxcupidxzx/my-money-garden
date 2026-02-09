@@ -20,7 +20,7 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border/50 z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       {/* Top accent line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
       

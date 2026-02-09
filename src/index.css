@@ -219,9 +219,18 @@
     @apply border-border;
   }
 
+  html {
+    height: -webkit-fill-available;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
   }
 
   /* Hide scrollbar for mobile but keep functionality */
